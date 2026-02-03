@@ -5,16 +5,41 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
+// Design tokens from docs
+export const THEME = {
+  primary: '#4f46e5',
+  secondary: '#ec4899',
+  bg: '#f8fafc',
+  card: '#ffffff',
+  text: '#1e293b',
+  success: '#10b981',
+  danger: '#ef4444',
+  muted: '#64748b',
+};
+
+export const GLOBAL_STYLES = {
+  card: {
+    backgroundColor: THEME.card,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    padding: 20,
+  },
+};
+
+const tintColorLight = THEME.primary;
 const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: THEME.text,
+    background: THEME.bg,
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: THEME.muted,
+    tabIconDefault: THEME.muted,
     tabIconSelected: tintColorLight,
   },
   dark: {
