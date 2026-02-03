@@ -1,4 +1,5 @@
 import { THEME } from '@/constants/theme';
+import { useLocalization } from '@/context/LocalizationContext';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
@@ -43,6 +44,7 @@ const MapModal = ({
     locationError,
     onRetryLocation
 }: MapModalProps) => {
+    const { t } = useLocalization();
     const isClockIn = actionType === 'clock-in';
 
     return (
@@ -55,7 +57,7 @@ const MapModal = ({
                 <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
                         <Text style={styles.modalTitle}>
-                            {isClockIn ? 'Confirm Clock In' : 'Confirm Clock Out'}
+                            {isClockIn ? t.map.confirmClockIn : t.map.confirmClockOut}
                         </Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color={THEME.muted} />
@@ -75,13 +77,13 @@ const MapModal = ({
                                             style={styles.retryButton}
                                             onPress={onRetryLocation}
                                         >
-                                            <Text style={styles.retryText}>Retry GPS Search</Text>
+                                            <Text style={styles.retryText}>{t.map.retryGps}</Text>
                                         </TouchableOpacity>
                                     </>
                                 ) : (
                                     <>
                                         <ActivityIndicator size="large" color={THEME.primary} />
-                                        <Text style={styles.loadingText}>Gathering location...</Text>
+                                        <Text style={styles.loadingText}>{t.map.gatheringLocation}</Text>
                                     </>
                                 )}
                             </View>
@@ -102,15 +104,15 @@ const MapModal = ({
                                 color={isInside === true ? THEME.success : isInside === false ? THEME.danger : THEME.muted}
                             />
                             <Text style={[styles.statusText, { color: isInside === true ? THEME.success : isInside === false ? THEME.danger : THEME.muted }]}>
-                                {isInside === true ? `Matched: ${nearestPlace}` : isInside === false ? 'Outside Attendance Area' : 'Verifying Location...'}
+                                {isInside === true ? `${t.map.matched}: ${nearestPlace}` : isInside === false ? t.map.outsideAttendanceArea : t.map.verifyingLocation}
                             </Text>
                         </View>
                         <Text style={styles.infoDesc}>
                             {isInside === true
-                                ? 'Your location has been verified. You can proceed with the attendance.'
+                                ? t.map.locationVerified
                                 : isInside === false
-                                    ? 'Warning: You are currently outside the designated office area. This attendance might require HR approval.'
-                                    : 'Please wait while we verify your current position...'}
+                                    ? t.map.outsideWarning
+                                    : t.map.pleaseWait}
                         </Text>
                     </View>
 
@@ -122,7 +124,7 @@ const MapModal = ({
                         onPress={onConfirm}
                     >
                         <Text style={styles.confirmButtonText}>
-                            {isClockIn ? 'Clock In Now' : 'Clock Out Now'}
+                            {isClockIn ? t.home.clockInNow : t.home.clockOutNow}
                         </Text>
                     </TouchableOpacity>
                 </View>

@@ -1,6 +1,7 @@
 import MapModal from '@/components/MapModal';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
+import { useLocalization } from '@/context/LocalizationContext';
 import { useGeofence } from '@/hooks/use-geofence';
 import api from '@/services/api';
 import { Attendance, AttendanceStatus } from '@/types/attendance';
@@ -12,7 +13,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Dimensions,
-  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -29,25 +29,9 @@ import Animated, {
 
 const { width } = Dimensions.get('window');
 
-// Helper for formatting dates without external libs
-const formatDate = (date: Date, pattern: 'time' | 'fullDate' | 'shortTime' | 'historyDate') => {
-  if (pattern === 'time') {
-    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-  if (pattern === 'fullDate') {
-    return date.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-  }
-  if (pattern === 'shortTime') {
-    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  }
-  if (pattern === 'historyDate') {
-    return date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
-  }
-  return date.toDateString();
-};
-
 export default function HomeScreen() {
   const { user, logout } = useAuth();
+  const { t, locale } = useLocalization();
   const [status, setStatus] = useState<AttendanceStatus | null>(null);
   const [history, setHistory] = useState<Attendance[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,6 +43,42 @@ export default function HomeScreen() {
 
   // Use the new geofence hook
   const { isInside, nearestPlace, currentLocation, locations, refreshLocations, error: locationError, retryLocation } = useGeofence(!!user?.employee);
+
+  // Helper for formatting dates with selected locale
+  const formatDate = useCallback((date: Date, pattern: 'time' | 'fullDate' | 'shortTime' | 'historyDate') => {
+    const localeCode = locale === 'id' ? 'id-ID' : 'en-GB';
+
+    if (pattern === 'time') {
+      return date.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    if (pattern === 'fullDate') {
+      return date.toLocaleDateString(localeCode, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    }
+    if (pattern === 'shortTime') {
+      return date.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' });
+    }
+    if (pattern === 'historyDate') {
+      return date.toLocaleDateString(localeCode, { weekday: 'short', day: '2-digit', month: 'short' });
+    }
+    return date.toDateString();
+  }, [locale]);
+
+  // Helper for translating attendance status
+  const getStatusTranslation = useCallback((status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'approved':
+        return t.status.approved;
+      case 'rejected':
+        return t.status.rejected;
+      case 'pending':
+        return t.status.pending;
+      case 'locked':
+        return t.status.locked;
+      default:
+        return status; // Fallback to original status if not found
+    }
+  }, [t]);
 
   const handleAuthError = useCallback(async (err: any) => {
     const status = err.response?.status;
@@ -154,9 +174,12 @@ export default function HomeScreen() {
       await api.post(`/attendance/${pendingAction}`, payload);
       setPendingAction(null);
       onRefresh();
-      Alert.alert('Success', `Successfully ${pendingAction === 'clock-in' ? 'Clocked In' : 'Clocked Out'}`);
+      Alert.alert(
+        t.common.success,
+        `Successfully ${pendingAction === 'clock-in' ? t.home.clockIn : t.home.clockOut}`
+      );
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.error?.message || 'Operation failed');
+      Alert.alert(t.common.error, err.response?.data?.error?.message || t.errors.operationFailed);
     }
   };
 
@@ -173,7 +196,7 @@ export default function HomeScreen() {
             Attendance and payroll features are only available for accounts with a valid employee profile.
           </Text>
           <TouchableOpacity style={styles.logoutButtonSmall} onPress={logout}>
-            <Text style={styles.logoutTextSmall}>Sign Out & Try Again</Text>
+            <Text style={styles.logoutTextSmall}>{t.profile.signOut}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -183,7 +206,7 @@ export default function HomeScreen() {
   if (!status) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: THEME.muted }}>Loading dashboard...</Text>
+        <Text style={{ color: THEME.muted }}>{t.common.loading}</Text>
       </View>
     );
   }
@@ -198,17 +221,9 @@ export default function HomeScreen() {
       >
         {/* Header Section */}
         <View style={styles.header}>
-          <Animated.View entering={FadeInDown.delay(100)} style={styles.userInfo}>
-            <View>
-              <Text style={styles.greeting}>Good Morning,</Text>
-              <Text style={styles.userName}>{user?.name} 👋</Text>
-            </View>
-            <TouchableOpacity style={styles.profileButton}>
-              <Image
-                source={{ uri: `https://ui-avatars.com/api/?name=${user?.name}&background=4f46e5&color=fff` }}
-                style={styles.avatar}
-              />
-            </TouchableOpacity>
+          <Animated.View entering={FadeInDown.delay(100)}>
+            <Text style={styles.greeting}>{t.home.greeting}</Text>
+            <Text style={styles.userName}>{user?.name} 👋</Text>
           </Animated.View>
         </View>
 
@@ -229,7 +244,7 @@ export default function HomeScreen() {
                     color={isInside ? THEME.success : '#ff8a8a'}
                   />
                   <Text style={[styles.geofenceText, { color: isInside ? '#d1fae5' : '#fee2e2' }]}>
-                    {isInside ? `Inside ${nearestPlace}` : 'Outside Area'}
+                    {isInside ? `${t.home.insideArea} ${nearestPlace}` : t.home.outsideArea}
                   </Text>
                 </View>
               )}
@@ -243,7 +258,7 @@ export default function HomeScreen() {
         <View style={styles.statusRow}>
           <Animated.View entering={FadeInLeft.delay(300)} style={[styles.statusBox, GLOBAL_STYLES.card]}>
             <Ionicons name="enter-outline" size={24} color={THEME.success} />
-            <Text style={styles.statusBoxLabel}>Clock In</Text>
+            <Text style={styles.statusBoxLabel}>{t.home.clockIn}</Text>
             <Text style={styles.statusBoxTime}>
               {status.today_attendance?.clock_in
                 ? formatDate(new Date(`2000-01-01T${status.today_attendance.clock_in}`), 'shortTime')
@@ -253,7 +268,7 @@ export default function HomeScreen() {
 
           <Animated.View entering={FadeInRight.delay(300)} style={[styles.statusBox, GLOBAL_STYLES.card]}>
             <Ionicons name="exit-outline" size={24} color={THEME.danger} />
-            <Text style={styles.statusBoxLabel}>Clock Out</Text>
+            <Text style={styles.statusBoxLabel}>{t.home.clockOut}</Text>
             <Text style={styles.statusBoxTime}>
               {status.today_attendance?.clock_out
                 ? formatDate(new Date(`2000-01-01T${status.today_attendance.clock_out}`), 'shortTime')
@@ -270,7 +285,7 @@ export default function HomeScreen() {
               onPress={() => initiateClockAction('clock-in')}
             >
               <Ionicons name="location" size={24} color="white" style={{ marginRight: 10 }} />
-              <Text style={styles.mainButtonText}>Clock In Now</Text>
+              <Text style={styles.mainButtonText}>{t.home.clockInNow}</Text>
             </TouchableOpacity>
           )}
 
@@ -280,23 +295,23 @@ export default function HomeScreen() {
               onPress={() => initiateClockAction('clock-out')}
             >
               <Ionicons name="walk" size={24} color="white" style={{ marginRight: 10 }} />
-              <Text style={styles.mainButtonText}>Clock Out Now</Text>
+              <Text style={styles.mainButtonText}>{t.home.clockOutNow}</Text>
             </TouchableOpacity>
           )}
 
           {!status.can_clock_in && !status.can_clock_out && (
             <View style={[styles.mainButton, { backgroundColor: '#e2e8f0' }]}>
               <Ionicons name="checkmark-circle" size={24} color="#64748b" style={{ marginRight: 10 }} />
-              <Text style={[styles.mainButtonText, { color: '#64748b' }]}>Attendance Completed</Text>
+              <Text style={[styles.mainButtonText, { color: '#64748b' }]}>{t.home.attendanceCompleted}</Text>
             </View>
           )}
         </Animated.View>
 
         {/* Recent Activity */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Text style={styles.sectionTitle}>{t.home.recentActivity}</Text>
           <TouchableOpacity>
-            <Text style={styles.viewMore}>View History</Text>
+            <Text style={styles.viewMore}>{t.home.viewHistory}</Text>
           </TouchableOpacity>
         </View>
 
@@ -313,7 +328,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.historyInfo}>
                   <Text style={styles.historyDate}>{formatDate(new Date(item.date), 'historyDate')}</Text>
-                  <Text style={styles.historyStatus}>{item.status}</Text>
+                  <Text style={styles.historyStatus}>{getStatusTranslation(item.status)}</Text>
                 </View>
                 <View style={styles.historyTimes}>
                   <Text style={styles.historyTimeIn}>{item.clock_in ? item.clock_in.substring(0, 5) : '-'}</Text>
@@ -323,7 +338,7 @@ export default function HomeScreen() {
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No recent activity</Text>
+              <Text style={styles.emptyText}>{t.home.noActivity}</Text>
             </View>
           )}
         </Animated.View>
@@ -366,11 +381,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
   },
-  userInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   greeting: {
     fontSize: 14,
     color: THEME.muted,
@@ -380,18 +390,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: THEME.text,
-  },
-  profileButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: THEME.primary,
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
   },
   clockCard: {
     marginHorizontal: 20,
