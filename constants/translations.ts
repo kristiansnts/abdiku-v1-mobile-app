@@ -19,7 +19,7 @@ export const translations = {
 
     // Home/Attendance Screen
     home: {
-      greeting: 'Good Morning,',
+      greeting: 'Welcome,',
       clockIn: 'Clock In',
       clockOut: 'Clock Out',
       clockInNow: 'Clock In Now',
@@ -61,6 +61,7 @@ export const translations = {
       personalInfo: 'Personal Information',
       employmentDetails: 'Employment Details',
       compensation: 'Compensation',
+      salaryDetails: 'Salary Details',
       joinDate: 'Join Date',
       status: 'Status',
       baseSalary: 'Base Salary',
@@ -72,6 +73,12 @@ export const translations = {
       account: 'Account',
       signOut: 'Sign Out',
       version: 'Version',
+      viewDetails: 'View Details',
+      department: 'Department',
+      position: 'Position',
+      employeeId: 'Employee ID',
+      employeeType: 'Employee Type',
+      workLocation: 'Work Location',
     },
 
     // Languages
@@ -110,7 +117,7 @@ export const translations = {
 
     // Home/Attendance Screen
     home: {
-      greeting: 'Selamat Pagi,',
+      greeting: 'Selamat Datang,',
       clockIn: 'Masuk',
       clockOut: 'Pulang',
       clockInNow: 'Masuk Sekarang',
@@ -152,6 +159,7 @@ export const translations = {
       personalInfo: 'Informasi Pribadi',
       employmentDetails: 'Detail Kepegawaian',
       compensation: 'Kompensasi',
+      salaryDetails: 'Detail Gaji',
       joinDate: 'Tanggal Bergabung',
       status: 'Status',
       baseSalary: 'Gaji Pokok',
@@ -163,6 +171,12 @@ export const translations = {
       account: 'Akun',
       signOut: 'Keluar',
       version: 'Versi',
+      viewDetails: 'Lihat Detail',
+      department: 'Departemen',
+      position: 'Jabatan',
+      employeeId: 'ID Karyawan',
+      employeeType: 'Tipe Karyawan',
+      workLocation: 'Lokasi Kerja',
     },
 
     // Languages

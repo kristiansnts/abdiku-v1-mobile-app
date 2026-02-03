@@ -26,6 +26,7 @@ import Animated, {
   FadeInRight,
   FadeInUp,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -212,7 +213,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bg }} edges={['top']}>
       <ScrollView
         style={styles.container}
         refreshControl={
@@ -360,7 +361,7 @@ export default function HomeScreen() {
         locationError={locationError}
         onRetryLocation={retryLocation}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   greeting: {
