@@ -81,6 +81,37 @@ export default function HomeScreen() {
     }
   }, [t]);
 
+  // Helper to check if current time is within shift hours
+  const isWithinShift = useCallback(() => {
+    if (!status?.shift) return true; // If no shift, allow clock in/out
+
+    const now = new Date();
+    const [startHour, startMin] = status.shift.start_time.split(':').map(Number);
+    const [endHour, endMin] = status.shift.end_time.split(':').map(Number);
+
+    const shiftStart = new Date(now);
+    shiftStart.setHours(startHour, startMin, 0, 0);
+
+    const shiftEnd = new Date(now);
+    shiftEnd.setHours(endHour, endMin, 0, 0);
+
+    return now >= shiftStart && now <= shiftEnd;
+  }, [status?.shift]);
+
+  // Helper to calculate late minutes
+  const getLateMinutes = useCallback(() => {
+    if (!status?.shift || !status?.today_attendance?.clock_in) return 0;
+
+    const [startHour, startMin] = status.shift.start_time.split(':').map(Number);
+    const [clockHour, clockMin] = status.today_attendance.clock_in.split(':').map(Number);
+
+    const shiftStartMinutes = startHour * 60 + startMin;
+    const clockInMinutes = clockHour * 60 + clockMin;
+    const lateMinutes = clockInMinutes - shiftStartMinutes - status.shift.late_after_minutes;
+
+    return lateMinutes > 0 ? lateMinutes : 0;
+  }, [status?.shift, status?.today_attendance?.clock_in]);
+
   const handleAuthError = useCallback(async (err: any) => {
     const status = err.response?.status;
     const errorData = err.response?.data?.error;
@@ -255,6 +286,18 @@ export default function HomeScreen() {
           </LinearGradient>
         </Animated.View>
 
+        {/* Shift Info */}
+        {status.shift && (
+          <Animated.View entering={FadeInUp.delay(250)} style={styles.shiftInfoContainer}>
+            <View style={styles.shiftInfo}>
+              <Ionicons name="time-outline" size={16} color={THEME.muted} />
+              <Text style={styles.shiftInfoText}>
+                {t.home.shiftTime}: {status.shift.name} ({status.shift.start_time} - {status.shift.end_time})
+              </Text>
+            </View>
+          </Animated.View>
+        )}
+
         {/* Stats/Status Row */}
         <View style={styles.statusRow}>
           <Animated.View entering={FadeInLeft.delay(300)} style={[styles.statusBox, GLOBAL_STYLES.card]}>
@@ -265,6 +308,14 @@ export default function HomeScreen() {
                 ? formatDate(new Date(`2000-01-01T${status.today_attendance.clock_in}`), 'shortTime')
                 : '--:--'}
             </Text>
+            {/* Late Indicator */}
+            {getLateMinutes() > 0 && (
+              <View style={styles.lateBadge}>
+                <Text style={styles.lateBadgeText}>
+                  {t.home.lateBy} {getLateMinutes()} {t.home.minutes}
+                </Text>
+              </View>
+            )}
           </Animated.View>
 
           <Animated.View entering={FadeInRight.delay(300)} style={[styles.statusBox, GLOBAL_STYLES.card]}>
@@ -280,7 +331,16 @@ export default function HomeScreen() {
 
         {/* Action Button */}
         <Animated.View entering={FadeInUp.delay(400)} style={styles.actionContainer}>
-          {status.can_clock_in && (
+          {/* Outside Shift Hours Message */}
+          {!isWithinShift() && (status.can_clock_in || status.can_clock_out) && (
+            <View style={[styles.mainButton, styles.outsideShiftButton]}>
+              <Ionicons name="time-outline" size={24} color={THEME.muted} style={{ marginRight: 10 }} />
+              <Text style={[styles.mainButtonText, { color: THEME.muted }]}>{t.home.outsideShift}</Text>
+            </View>
+          )}
+
+          {/* Clock In Button - only show within shift */}
+          {isWithinShift() && status.can_clock_in && (
             <TouchableOpacity
               style={[styles.mainButton, { backgroundColor: THEME.primary }]}
               onPress={() => initiateClockAction('clock-in')}
@@ -290,7 +350,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
-          {status.can_clock_out && (
+          {/* Clock Out Button - only show within shift */}
+          {isWithinShift() && status.can_clock_out && (
             <TouchableOpacity
               style={[styles.mainButton, { backgroundColor: THEME.secondary }]}
               onPress={() => initiateClockAction('clock-out')}
@@ -300,6 +361,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
+          {/* Attendance Completed */}
           {!status.can_clock_in && !status.can_clock_out && (
             <View style={[styles.mainButton, { backgroundColor: '#e2e8f0' }]}>
               <Ionicons name="checkmark-circle" size={24} color="#64748b" style={{ marginRight: 10 }} />
@@ -328,11 +390,20 @@ export default function HomeScreen() {
                   />
                 </View>
                 <View style={styles.historyInfo}>
-                  <Text style={styles.historyDate}>{formatDate(new Date(item.date), 'historyDate')}</Text>
+                  <View style={styles.historyDateRow}>
+                    <Text style={styles.historyDate}>{formatDate(new Date(item.date), 'historyDate')}</Text>
+                    {item.is_late && (
+                      <View style={styles.historyLateBadge}>
+                        <Text style={styles.historyLateBadgeText}>{t.home.late}</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.historyStatus}>{getStatusTranslation(item.status)}</Text>
                 </View>
                 <View style={styles.historyTimes}>
-                  <Text style={styles.historyTimeIn}>{item.clock_in ? item.clock_in.substring(0, 5) : '-'}</Text>
+                  <Text style={[styles.historyTimeIn, item.is_late && styles.historyTimeLate]}>
+                    {item.clock_in ? item.clock_in.substring(0, 5) : '-'}
+                  </Text>
                   <Text style={styles.historyTimeOut}>{item.clock_out ? item.clock_out.substring(0, 5) : '-'}</Text>
                 </View>
               </View>
@@ -434,6 +505,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  shiftInfoContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  shiftInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  shiftInfoText: {
+    fontSize: 13,
+    color: THEME.muted,
+    fontWeight: '500',
+  },
   statusRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -456,6 +542,18 @@ const styles = StyleSheet.create({
     color: THEME.text,
     marginTop: 4,
   },
+  lateBadge: {
+    marginTop: 8,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  lateBadgeText: {
+    fontSize: 11,
+    color: THEME.danger,
+    fontWeight: '600',
+  },
   actionContainer: {
     paddingHorizontal: 20,
     marginBottom: 30,
@@ -476,6 +574,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  outsideShiftButton: {
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -512,10 +616,26 @@ const styles = StyleSheet.create({
   historyInfo: {
     flex: 1,
   },
+  historyDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   historyDate: {
     fontSize: 15,
     fontWeight: '600',
     color: THEME.text,
+  },
+  historyLateBadge: {
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  historyLateBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: THEME.danger,
   },
   historyStatus: {
     fontSize: 12,
@@ -529,6 +649,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: THEME.success,
+  },
+  historyTimeLate: {
+    color: THEME.danger,
   },
   historyTimeOut: {
     fontSize: 14,

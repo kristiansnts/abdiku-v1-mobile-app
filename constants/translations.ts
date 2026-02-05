@@ -14,6 +14,7 @@ export const translations = {
     // Tabs
     tabs: {
       attendance: 'Attendance',
+      requests: 'Requests',
       profile: 'Profile',
     },
 
@@ -30,6 +31,11 @@ export const translations = {
       noActivity: 'No recent activity',
       insideArea: 'Inside',
       outsideArea: 'Outside Area',
+      outsideShift: 'Outside Shift Hours',
+      shiftTime: 'Shift',
+      late: 'Late',
+      lateBy: 'Late by',
+      minutes: 'min',
     },
 
     // Attendance Status
@@ -38,6 +44,33 @@ export const translations = {
       rejected: 'Rejected',
       pending: 'Pending Review',
       locked: 'Locked',
+    },
+
+    // Requests Screen
+    requests: {
+      title: 'My Requests',
+      newRequest: 'New Request',
+      noRequests: 'No requests yet',
+      selectType: 'Select Request Type',
+      lateRequest: 'Late Justification',
+      lateDesc: 'Justify your late arrival',
+      correctionRequest: 'Time Correction',
+      correctionDesc: 'Correct clock in/out time',
+      missingRequest: 'Missing Attendance',
+      missingDesc: 'Request for forgotten attendance',
+      selectAttendance: 'Select Attendance',
+      selectDate: 'Select Date',
+      clockInTime: 'Clock In Time',
+      clockOutTime: 'Clock Out Time',
+      reason: 'Reason',
+      reasonPlaceholder: 'Enter your reason...',
+      submit: 'Submit Request',
+      cancel: 'Cancel',
+      reviewedBy: 'Reviewed by',
+      reviewerNotes: 'Reviewer Notes',
+      createdAt: 'Submitted',
+      deleteConfirm: 'Delete this request?',
+      deleteSuccess: 'Request deleted',
     },
 
     // Map Modal
@@ -112,6 +145,7 @@ export const translations = {
     // Tabs
     tabs: {
       attendance: 'Kehadiran',
+      requests: 'Pengajuan',
       profile: 'Profil',
     },
 
@@ -128,6 +162,11 @@ export const translations = {
       noActivity: 'Tidak ada aktivitas terkini',
       insideArea: 'Di Dalam',
       outsideArea: 'Di Luar Area',
+      outsideShift: 'Di Luar Jam Kerja',
+      shiftTime: 'Shift',
+      late: 'Terlambat',
+      lateBy: 'Terlambat',
+      minutes: 'menit',
     },
 
     // Attendance Status
@@ -136,6 +175,33 @@ export const translations = {
       rejected: 'Ditolak',
       pending: 'Menunggu Review',
       locked: 'Terkunci',
+    },
+
+    // Requests Screen
+    requests: {
+      title: 'Pengajuan Saya',
+      newRequest: 'Pengajuan Baru',
+      noRequests: 'Belum ada pengajuan',
+      selectType: 'Pilih Jenis Pengajuan',
+      lateRequest: 'Justifikasi Terlambat',
+      lateDesc: 'Jelaskan alasan keterlambatan',
+      correctionRequest: 'Koreksi Waktu',
+      correctionDesc: 'Koreksi waktu masuk/pulang',
+      missingRequest: 'Kehadiran Terlewat',
+      missingDesc: 'Pengajuan untuk kehadiran yang lupa dicatat',
+      selectAttendance: 'Pilih Kehadiran',
+      selectDate: 'Pilih Tanggal',
+      clockInTime: 'Waktu Masuk',
+      clockOutTime: 'Waktu Pulang',
+      reason: 'Alasan',
+      reasonPlaceholder: 'Masukkan alasan Anda...',
+      submit: 'Kirim Pengajuan',
+      cancel: 'Batal',
+      reviewedBy: 'Ditinjau oleh',
+      reviewerNotes: 'Catatan Peninjau',
+      createdAt: 'Diajukan',
+      deleteConfirm: 'Hapus pengajuan ini?',
+      deleteSuccess: 'Pengajuan dihapus',
     },
 
     // Map Modal

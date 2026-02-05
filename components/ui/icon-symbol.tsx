@@ -20,6 +20,7 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'clock.fill': 'access-time',
   'person.fill': 'person',
+  'doc.text.fill': 'description',
 } as IconMapping;
 
 /**
