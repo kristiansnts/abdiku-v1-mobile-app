@@ -12,6 +12,7 @@ import {
   ShiftInfo,
   StatusRow,
 } from '@/components/attendance';
+import { Toast } from '@/components/common/Toast';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useLocalization } from '@/context/LocalizationContext';
@@ -26,6 +27,11 @@ export default function HomeScreen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showMapModal, setShowMapModal] = useState(false);
   const [showLateNotice, setShowLateNotice] = useState(true);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' }>({
+    visible: false,
+    message: '',
+    type: 'success'
+  });
 
   const {
     isInside,
@@ -105,12 +111,17 @@ export default function HomeScreen() {
     setShowMapModal(false);
     try {
       await handleClockAction();
-      Alert.alert(
-        t.common.success,
-        `Successfully ${pendingAction === 'clock-in' ? t.home.clockIn : t.home.clockOut}`
-      );
+      setToast({
+        visible: true,
+        message: pendingAction === 'clock-in' ? t.home.clockInSuccess : t.home.clockOutSuccess,
+        type: 'success'
+      });
     } catch (err: any) {
-      Alert.alert(t.common.error, err.response?.data?.error?.message || t.errors.operationFailed);
+      setToast({
+        visible: true,
+        message: err.response?.data?.error?.message || t.errors.operationFailed,
+        type: 'error'
+      });
     }
   };
 
@@ -142,6 +153,13 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bg }} edges={['top']}>
+      {toast.visible && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onHide={() => setToast(prev => ({ ...prev, visible: false }))}
+        />
+      )}
       {!!(status.can_clock_in && liveLateMinutes > 0 && showLateNotice) && (
         <View style={styles.lateNoticeContainerFixed}>
           <View style={{ width: 24 }} />

@@ -40,6 +40,8 @@ export const translations = {
       hour: 'hr',
       minutes: 'min',
       minute: 'min',
+      clockInSuccess: 'Successfully clocked in!',
+      clockOutSuccess: 'Successfully clocked out!',
     },
 
     // Attendance Status
@@ -181,6 +183,8 @@ export const translations = {
       hour: 'jam',
       minutes: 'menit',
       minute: 'menit',
+      clockInSuccess: 'Berhasil masuk!',
+      clockOutSuccess: 'Berhasil pulang!',
     },
 
     // Attendance Status
