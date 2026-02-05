@@ -1,32 +1,25 @@
+import React, { useEffect, useState } from 'react';
+import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+
 import { THEME } from '@/constants/theme';
 import { Language } from '@/constants/translations';
 import { useAuth } from '@/context/AuthContext';
 import { useLocalization } from '@/context/LocalizationContext';
-import api from '@/services/api';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-interface Employee {
-  name: string;
-  join_date: string;
-  status: string;
-  company: {
-    name: string;
-  };
-}
+import * as employeeService from '@/services/employeeService';
+import { profileStyles as styles } from '@/styles/screens';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout } = useAuth();
   const { locale, setLocale, t } = useLocalization();
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [employee, setEmployee] = useState<employeeService.Employee | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   useEffect(() => {
-    api.get('/employee/detail').then((res) => setEmployee(res.data.data));
+    employeeService.getEmployeeDetail().then(setEmployee);
   }, []);
 
   const handleLanguageChange = async (newLocale: Language) => {
@@ -45,6 +38,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bg }} edges={['top']}>
       <ScrollView style={styles.container}>
+        {/* Profile Card */}
         <View style={styles.card}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{employee.name[0]}</Text>
@@ -53,6 +47,7 @@ export default function ProfileScreen() {
           <Text style={styles.company}>{employee.company.name}</Text>
         </View>
 
+        {/* Menu Items */}
         <View style={styles.detailsCard}>
           <TouchableOpacity
             style={styles.menuItem}
@@ -79,6 +74,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Settings */}
         <View style={styles.detailsCard}>
           <Text style={styles.cardTitle}>{t.profile.settings}</Text>
 
@@ -97,6 +93,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Text style={styles.logoutText}>{t.profile.signOut}</Text>
         </TouchableOpacity>
@@ -147,134 +144,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: THEME.bg, paddingHorizontal: 15 },
-  card: {
-    backgroundColor: 'white',
-    padding: 25,
-    borderRadius: 20,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  name: { fontSize: 20, fontWeight: 'bold', color: THEME.text },
-  company: { color: THEME.muted, marginTop: 5 },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: THEME.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  avatarText: { color: 'white', fontSize: 28, fontWeight: 'bold' },
-  detailsCard: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 15,
-  },
-  cardTitle: { fontWeight: 'bold', marginBottom: 10, fontSize: 16, color: THEME.text },
-  menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  menuText: {
-    fontSize: 16,
-    color: THEME.text,
-    fontWeight: '500',
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#f1f5f9',
-  },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  settingRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  settingText: {
-    fontSize: 16,
-    color: THEME.text,
-    fontWeight: '500',
-  },
-  settingValue: {
-    fontSize: 14,
-    color: THEME.muted,
-  },
-  logoutButton: {
-    backgroundColor: THEME.danger,
-    padding: 16,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  logoutText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 40,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: THEME.text,
-  },
-  languageOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#f8fafc',
-    marginBottom: 10,
-  },
-  languageOptionActive: {
-    backgroundColor: '#eff6ff',
-    borderWidth: 2,
-    borderColor: THEME.primary,
-  },
-  languageText: {
-    fontSize: 16,
-    color: THEME.text,
-    fontWeight: '500',
-  },
-  languageTextActive: {
-    color: THEME.primary,
-    fontWeight: 'bold',
-  },
-});
