@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
-import { Attendance } from '@/types/attendance';
-import { formatDate, extractShortTime } from '@/utils/date';
-import { getStatusTranslation } from '@/utils/status';
 import { Language, TranslationKeys } from '@/constants/translations';
+import { Attendance } from '@/types/attendance';
+import { extractShortTime, formatDate, formatLateTime } from '@/utils/date';
+import { getStatusTranslation } from '@/utils/status';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 interface HistoryListProps {
   history: Attendance[];
@@ -44,7 +44,10 @@ export const HistoryList: React.FC<HistoryListProps> = ({
                   </Text>
                   {item.is_late && (
                     <View style={styles.historyLateBadge}>
-                      <Text style={styles.historyLateBadgeText}>{t.home.late}</Text>
+                      <Text style={styles.historyLateBadgeText}>
+                        {t.home.late}
+                        {item.late_minutes && item.late_minutes > 0 ? ` (${formatLateTime(item.late_minutes, t.home)})` : ''}
+                      </Text>
                     </View>
                   )}
                 </View>

@@ -90,3 +90,26 @@ export const extractShortTime = (timeStr: string | null): string => {
   if (!timeStr) return '-';
   return timeStr.substring(0, 5);
 };
+
+/**
+ * Format late minutes into hours and minutes
+ */
+export const formatLateTime = (minutes: number, t: { hour: string, hours: string, minute: string, minutes: string }): string => {
+  if (minutes <= 0) return '';
+
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+
+  let result = '';
+
+  if (h > 0) {
+    result += `${h} ${h > 1 ? t.hours : t.hour}`;
+  }
+
+  if (m > 0) {
+    if (result) result += ' ';
+    result += `${m} ${m > 1 ? t.minutes : t.minute}`;
+  }
+
+  return result;
+};

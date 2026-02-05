@@ -1,31 +1,32 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import MapModal from '@/components/MapModal';
+import {
+  ActionButton,
+  ClockCard,
+  HistoryList,
+  ShiftInfo,
+  StatusRow,
+} from '@/components/attendance';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useLocalization } from '@/context/LocalizationContext';
 import { useGeofence } from '@/hooks/use-geofence';
 import { useAttendance } from '@/hooks/useAttendance';
-import MapModal from '@/components/MapModal';
-import {
-  ClockCard,
-  StatusRow,
-  ActionButton,
-  HistoryList,
-  ShiftInfo,
-} from '@/components/attendance';
 import { homeStyles as styles } from '@/styles/screens';
+import { formatLateTime } from '@/utils/date';
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const { t, locale } = useLocalization();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showMapModal, setShowMapModal] = useState(false);
+  const [showLateNotice, setShowLateNotice] = useState(true);
 
-  // Use custom hooks
   const {
     isInside,
     nearestPlace,
@@ -33,6 +34,7 @@ export default function HomeScreen() {
     locations,
     refreshLocations,
     error: locationError,
+    isMockLocation,
     retryLocation,
   } = useGeofence(!!user?.employee);
 
@@ -58,22 +60,43 @@ export default function HomeScreen() {
     pendingAction,
     isWithinShift,
     getLateMinutes,
+    getLiveLateMinutes,
   } = useAttendance({
     enabled: !!user?.employee,
     onAuthError: handleAuthError,
   });
 
-  // Update time every second
+  const liveLateMinutes = getLiveLateMinutes(currentTime);
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (isMockLocation) {
+      Alert.alert(
+        t.errors.mockLocationDetected,
+        t.errors.mockLocationMessage,
+        [{ text: t.common.ok, style: 'default' }],
+        { cancelable: false }
+      );
+    }
+  }, [isMockLocation, t]);
 
   const onRefresh = useCallback(async () => {
     await Promise.all([refresh(), refreshLocations()]);
   }, [refresh, refreshLocations]);
 
   const onClockAction = (type: 'clock-in' | 'clock-out') => {
+    if (isMockLocation) {
+      Alert.alert(
+        t.errors.mockLocationDetected,
+        t.errors.mockLocationBlocked,
+        [{ text: t.common.ok }]
+      );
+      return;
+    }
     initiateClockAction(type);
     setShowMapModal(true);
   };
@@ -91,7 +114,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Missing Employee View
   if (!user?.employee) {
     return (
       <View style={styles.center}>
@@ -99,8 +121,7 @@ export default function HomeScreen() {
           <Ionicons name="person-remove-outline" size={60} color={THEME.muted} />
           <Text style={styles.emptyTitle}>Account Setup Required</Text>
           <Text style={styles.emptyDesc}>
-            Your account ({user?.email}) is not linked to an employee record.
-            {"\n\n"}
+            Your account ({user?.email}) is not linked to an employee record.{"\n\n"}
             Attendance and payroll features are only available for accounts with a valid employee profile.
           </Text>
           <TouchableOpacity style={styles.logoutButtonSmall} onPress={logout}>
@@ -121,13 +142,26 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bg }} edges={['top']}>
+      {!!(status.can_clock_in && liveLateMinutes > 0 && showLateNotice) && (
+        <View style={styles.lateNoticeContainerFixed}>
+          <View style={{ width: 24 }} />
+          <View style={styles.lateNoticeContent}>
+            <Ionicons name="alert-circle" size={14} color={THEME.danger} />
+            <Text style={styles.lateNoticeText}>
+              {t.home.lateBy} {formatLateTime(liveLateMinutes, t.home)}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setShowLateNotice(false)} style={styles.closeNoticeButton}>
+            <Ionicons name="close" size={20} color={THEME.danger} />
+          </TouchableOpacity>
+        </View>
+      )}
       <ScrollView
         style={styles.container}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME.primary} />
         }
       >
-        {/* Header */}
         <View style={styles.header}>
           <Animated.View entering={FadeInDown.delay(100)}>
             <Text style={styles.greeting}>{t.home.greeting}</Text>
@@ -135,7 +169,6 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
 
-        {/* Clock Card */}
         <ClockCard
           currentTime={currentTime}
           locale={locale}
@@ -144,10 +177,8 @@ export default function HomeScreen() {
           t={{ insideArea: t.home.insideArea, outsideArea: t.home.outsideArea }}
         />
 
-        {/* Shift Info */}
         <ShiftInfo shift={status.shift} t={{ shiftTime: t.home.shiftTime }} />
 
-        {/* Status Row */}
         <StatusRow
           clockIn={status.today_attendance?.clock_in || null}
           clockOut={status.today_attendance?.clock_out || null}
@@ -157,11 +188,13 @@ export default function HomeScreen() {
             clockIn: t.home.clockIn,
             clockOut: t.home.clockOut,
             lateBy: t.home.lateBy,
+            hour: t.home.hour,
+            hours: t.home.hours,
+            minute: t.home.minute,
             minutes: t.home.minutes,
           }}
         />
 
-        {/* Action Button */}
         <ActionButton
           canClockIn={status.can_clock_in}
           canClockOut={status.can_clock_out}
@@ -176,13 +209,10 @@ export default function HomeScreen() {
           }}
         />
 
-        {/* History List */}
         <HistoryList history={history} locale={locale} t={t} />
-
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Map Modal */}
       <MapModal
         visible={showMapModal}
         onClose={() => setShowMapModal(false)}
@@ -195,6 +225,7 @@ export default function HomeScreen() {
         locations={locations}
         locationError={locationError}
         onRetryLocation={retryLocation}
+        isMockLocation={isMockLocation}
       />
     </SafeAreaView>
   );

@@ -9,6 +9,7 @@ export const translations = {
       confirm: 'Confirm',
       retry: 'Retry',
       close: 'Close',
+      ok: 'OK',
     },
 
     // Tabs
@@ -35,7 +36,10 @@ export const translations = {
       shiftTime: 'Shift',
       late: 'Late',
       lateBy: 'Late by',
+      hours: 'hr',
+      hour: 'hr',
       minutes: 'min',
+      minute: 'min',
     },
 
     // Attendance Status
@@ -86,6 +90,8 @@ export const translations = {
       locationVerified: 'Your location has been verified. You can proceed with the attendance.',
       outsideWarning: 'Warning: You are currently outside the designated office area. This attendance might require HR approval.',
       pleaseWait: 'Please wait while we verify your current position...',
+      mockLocationTitle: '⚠️ Mock Location Detected',
+      mockLocationBanner: 'Fake GPS detected. Please disable mock location apps to continue.',
     },
 
     // Profile Screen
@@ -127,6 +133,10 @@ export const translations = {
       locationUnavailable: 'Location unavailable',
       sessionError: 'Session error',
       operationFailed: 'Operation failed',
+      mockLocationDetected: 'Mock Location Detected',
+      mockLocationMessage: 'We detected that you are using a fake GPS location. Please disable any mock location apps and use your real GPS location for attendance.',
+      mockLocationBlocked: 'Cannot perform attendance action while using fake GPS. Please disable mock location apps and try again.',
+      mockLocationError: '⚠️ Mock/Fake GPS detected! Please disable mock location apps.',
     },
   },
 
@@ -140,6 +150,7 @@ export const translations = {
       confirm: 'Konfirmasi',
       retry: 'Coba Lagi',
       close: 'Tutup',
+      ok: 'OK',
     },
 
     // Tabs
@@ -166,7 +177,10 @@ export const translations = {
       shiftTime: 'Shift',
       late: 'Terlambat',
       lateBy: 'Terlambat',
+      hours: 'jam',
+      hour: 'jam',
       minutes: 'menit',
+      minute: 'menit',
     },
 
     // Attendance Status
@@ -217,6 +231,8 @@ export const translations = {
       locationVerified: 'Lokasi Anda telah diverifikasi. Anda dapat melanjutkan kehadiran.',
       outsideWarning: 'Peringatan: Anda saat ini berada di luar area kantor yang ditentukan. Kehadiran ini mungkin memerlukan persetujuan HR.',
       pleaseWait: 'Harap tunggu sementara kami memverifikasi posisi Anda saat ini...',
+      mockLocationTitle: '⚠️ Lokasi Palsu Terdeteksi',
+      mockLocationBanner: 'GPS palsu terdeteksi. Silakan nonaktifkan aplikasi lokasi palsu untuk melanjutkan.',
     },
 
     // Profile Screen
@@ -258,6 +274,10 @@ export const translations = {
       locationUnavailable: 'Lokasi tidak tersedia',
       sessionError: 'Kesalahan sesi',
       operationFailed: 'Operasi gagal',
+      mockLocationDetected: 'Lokasi Palsu Terdeteksi',
+      mockLocationMessage: 'Kami mendeteksi bahwa Anda menggunakan lokasi GPS palsu. Silakan nonaktifkan aplikasi lokasi palsu dan gunakan lokasi GPS asli Anda untuk kehadiran.',
+      mockLocationBlocked: 'Tidak dapat melakukan absensi saat menggunakan GPS palsu. Silakan nonaktifkan aplikasi lokasi palsu dan coba lagi.',
+      mockLocationError: '⚠️ GPS Palsu terdeteksi! Silakan nonaktifkan aplikasi lokasi palsu.',
     },
   },
 };

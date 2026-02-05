@@ -1,3 +1,4 @@
+import { useLocalization } from '@/context/LocalizationContext';
 import api from '@/services/api';
 import { CompanyLocation } from '@/types/attendance';
 import * as Location from 'expo-location';
@@ -20,12 +21,14 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 export const useGeofence = (enabled: boolean = true) => {
+    const { t } = useLocalization();
     const [locations, setLocations] = useState<CompanyLocation[]>([]);
     const [isInside, setIsInside] = useState<boolean | null>(null);
     const [nearestPlace, setNearestPlace] = useState<string | null>(null);
     const [currentLocation, setCurrentLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isMockLocation, setIsMockLocation] = useState<boolean>(false);
 
     const locationSubscription = useRef<Location.LocationSubscription | null>(null);
 
@@ -37,15 +40,25 @@ export const useGeofence = (enabled: boolean = true) => {
             setError(null);
         } catch (err) {
             console.error('Fetch locations error:', err);
-            setError('Failed to load company geofences');
+            setError(t.errors.operationFailed);
         } finally {
             setLoading(false);
         }
     };
 
-    const checkGeofence = useCallback((lat: number, lon: number, currentLocations: CompanyLocation[]) => {
+    const checkGeofence = useCallback((lat: number, lon: number, currentLocations: CompanyLocation[], isMock?: boolean) => {
         setCurrentLocation({ lat, lng: lon });
         setError(null); // Clear error if we get a valid location
+
+        if (isMock === true) {
+            setIsMockLocation(true);
+            setError(t.errors.mockLocationError);
+            setIsInside(false);
+            return;
+        } else {
+            setIsMockLocation(false);
+        }
+
         let foundInside = false;
         let minDistance = Infinity;
         let closestName = null;
@@ -90,7 +103,12 @@ export const useGeofence = (enabled: boolean = true) => {
                 });
 
                 if (lastKnown) {
-                    checkGeofence(lastKnown.coords.latitude, lastKnown.coords.longitude, currentLocations);
+                    checkGeofence(
+                        lastKnown.coords.latitude,
+                        lastKnown.coords.longitude,
+                        currentLocations,
+                        (lastKnown as any).mocked
+                    );
                     locationFound = true;
                 }
             } catch (lastKnownErr) {
@@ -111,7 +129,12 @@ export const useGeofence = (enabled: boolean = true) => {
                     ]);
 
                     if (quickLocation) {
-                        checkGeofence(quickLocation.coords.latitude, quickLocation.coords.longitude, currentLocations);
+                        checkGeofence(
+                            quickLocation.coords.latitude,
+                            quickLocation.coords.longitude,
+                            currentLocations,
+                            (quickLocation as any).mocked
+                        );
                         locationFound = true;
                     }
                 } catch (quickErr) {
@@ -134,7 +157,12 @@ export const useGeofence = (enabled: boolean = true) => {
                     ]);
 
                     if (preciseLocation) {
-                        checkGeofence(preciseLocation.coords.latitude, preciseLocation.coords.longitude, currentLocations);
+                        checkGeofence(
+                            preciseLocation.coords.latitude,
+                            preciseLocation.coords.longitude,
+                            currentLocations,
+                            (preciseLocation as any).mocked
+                        );
                         locationFound = true;
                     }
                 } catch (preciseErr) {
@@ -155,11 +183,16 @@ export const useGeofence = (enabled: boolean = true) => {
                     timeInterval: 5000, // Update at least every 5 seconds
                 },
                 (location) => {
-                    checkGeofence(location.coords.latitude, location.coords.longitude, currentLocations);
+                    checkGeofence(
+                        location.coords.latitude,
+                        location.coords.longitude,
+                        currentLocations,
+                        (location as any).mocked
+                    );
                 }
             );
         } catch (err: any) {
-            const errorMessage = err.message || 'Location unavailable';
+            const errorMessage = err.message || t.errors.locationUnavailable;
             setError(errorMessage);
             console.error('Location tracking error:', err);
         }
@@ -191,6 +224,7 @@ export const useGeofence = (enabled: boolean = true) => {
         refreshLocations: fetchLocations,
         loading,
         error,
+        isMockLocation,
         retryLocation: () => locations.length > 0 && startLocationTracking(locations)
     };
 };

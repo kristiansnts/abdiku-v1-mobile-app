@@ -1,10 +1,9 @@
+import * as attendanceService from '@/services/attendanceService';
+import { Attendance, AttendanceStatus } from '@/types/attendance';
+import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import * as Location from 'expo-location';
-import * as Haptics from 'expo-haptics';
-import { Attendance, AttendanceStatus, Shift } from '@/types/attendance';
-import * as attendanceService from '@/services/attendanceService';
-import { TranslationKeys } from '@/constants/translations';
 
 interface UseAttendanceOptions {
   enabled?: boolean;
@@ -23,6 +22,7 @@ interface UseAttendanceReturn {
   setPendingAction: (action: 'clock-in' | 'clock-out' | null) => void;
   isWithinShift: () => boolean;
   getLateMinutes: () => number;
+  getLiveLateMinutes: (now: Date) => number;
 }
 
 /**
@@ -118,6 +118,23 @@ export const useAttendance = (
   }, [status?.shift, status?.today_attendance?.clock_in]);
 
   /**
+   * Calculate late minutes based on current time if not clocked in yet
+   */
+  const getLiveLateMinutes = useCallback((now: Date) => {
+    if (!status?.shift || status?.today_attendance?.clock_in) return 0;
+
+    const [startHour, startMin] = status.shift.start_time.split(':').map(Number);
+    const shiftStart = new Date(now);
+    shiftStart.setHours(startHour, startMin, 0, 0);
+
+    const diffMs = now.getTime() - shiftStart.getTime();
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    const lateMinutes = diffMin - status.shift.late_after_minutes;
+
+    return lateMinutes > 0 ? lateMinutes : 0;
+  }, [status?.shift, status?.today_attendance?.clock_in]);
+
+  /**
    * Initiate a clock action with haptic feedback
    */
   const initiateClockAction = useCallback((type: 'clock-in' | 'clock-out') => {
@@ -171,5 +188,6 @@ export const useAttendance = (
     setPendingAction,
     isWithinShift,
     getLateMinutes,
+    getLiveLateMinutes,
   };
 };

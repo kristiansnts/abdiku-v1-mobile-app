@@ -29,6 +29,7 @@ interface MapModalProps {
     }>;
     locationError?: string | null;
     onRetryLocation?: () => void;
+    isMockLocation?: boolean;
 }
 
 const MapModal = ({
@@ -42,7 +43,8 @@ const MapModal = ({
     actionType,
     locations,
     locationError,
-    onRetryLocation
+    onRetryLocation,
+    isMockLocation = false
 }: MapModalProps) => {
     const { t } = useLocalization();
     const isClockIn = actionType === 'clock-in';
@@ -97,6 +99,19 @@ const MapModal = ({
                     </View>
 
                     <View style={styles.infoContainer}>
+                        {/* Mock Location Warning */}
+                        {isMockLocation && (
+                            <View style={styles.mockWarningBanner}>
+                                <Ionicons name="warning" size={20} color="#dc2626" />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.mockWarningTitle}>{t.map.mockLocationTitle}</Text>
+                                    <Text style={styles.mockWarningText}>
+                                        {t.map.mockLocationBanner}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
                         <View style={[styles.statusBadge, { backgroundColor: isInside === true ? '#ecfdf5' : isInside === false ? '#fef2f2' : '#f8fafc' }]}>
                             <Ionicons
                                 name={isInside === true ? "checkmark-circle" : isInside === false ? "warning" : "sync-outline"}
@@ -217,6 +232,28 @@ const styles = StyleSheet.create({
     retryText: {
         color: '#fff',
         fontWeight: 'bold',
+    },
+    mockWarningBanner: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        backgroundColor: '#fee2e2',
+        borderLeftWidth: 4,
+        borderLeftColor: '#dc2626',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+        gap: 10,
+    },
+    mockWarningTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#dc2626',
+        marginBottom: 4,
+    },
+    mockWarningText: {
+        fontSize: 13,
+        color: '#991b1b',
+        lineHeight: 18,
     },
 });
 

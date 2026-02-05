@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
 import { THEME } from '@/constants/theme';
+import { StyleSheet } from 'react-native';
 
 export const homeStyles = StyleSheet.create({
   container: {
@@ -58,5 +58,32 @@ export const homeStyles = StyleSheet.create({
   logoutTextSmall: {
     color: THEME.danger,
     fontWeight: 'bold',
+  },
+  lateNoticeContainerFixed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff1f2',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#fecaca',
+    width: '100%',
+  },
+  lateNoticeContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  lateNoticeText: {
+    color: THEME.danger,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  closeNoticeButton: {
+    padding: 4,
   },
 });

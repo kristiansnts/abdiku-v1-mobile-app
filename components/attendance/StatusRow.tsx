@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
-import { formatDate } from '@/utils/date';
 import { Language } from '@/constants/translations';
+import { formatDate, formatLateTime } from '@/utils/date';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 
 interface StatusRowProps {
   clockIn: string | null;
@@ -15,6 +15,9 @@ interface StatusRowProps {
     clockIn: string;
     clockOut: string;
     lateBy: string;
+    hour: string;
+    hours: string;
+    minute: string;
     minutes: string;
   };
 }
@@ -40,7 +43,7 @@ export const StatusRow: React.FC<StatusRowProps> = ({
         {lateMinutes > 0 && (
           <View style={styles.lateBadge}>
             <Text style={styles.lateBadgeText}>
-              {t.lateBy} {lateMinutes} {t.minutes}
+              {t.lateBy} {formatLateTime(lateMinutes, t)}
             </Text>
           </View>
         )}
