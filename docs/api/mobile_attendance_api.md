@@ -313,9 +313,11 @@ Aggregated data for the mobile home screen. Returns today's attendance status, l
         "id": 101,
         "type": "CLOCK_IN",
         "datetime": "2026-02-06T09:37:00",
-        "status": "LATE",
-        "label": "Terlambat 37 menit",
-        "late_minutes": 37
+        "status": "APPROVED",
+        "label": "Disetujui",
+        "is_late": true,
+        "late_minutes": 37,
+        "late_label": "Terlambat 37 menit"
       },
       {
         "id": 102,
@@ -342,7 +344,7 @@ Aggregated data for the mobile home screen. Returns today's attendance status, l
 | today_attendance.shift | string | Shift schedule (start–end) or null |
 | can_clock_in | boolean | Whether user can clock in |
 | can_clock_out | boolean | Whether user can clock out |
-| latest_activity | array | Last 5 activity items (attendance + requests). Late arrivals include `late_minutes` field |
+| latest_activity | array | Last 5 activity items (attendance + requests). Late arrivals include `is_late`, `late_minutes`, `late_label` fields |
 | latest_payslip | object | Most recent finalized payslip or null |
 
 ---
@@ -375,9 +377,11 @@ Unified activity feed combining attendance records and requests, sorted by datet
       "id": 101,
       "type": "CLOCK_IN",
       "datetime": "2026-02-06T09:37:00",
-      "status": "LATE",
-      "label": "Terlambat 37 menit",
-      "late_minutes": 37
+      "status": "APPROVED",
+      "label": "Disetujui",
+      "is_late": true,
+      "late_minutes": 37,
+      "late_label": "Terlambat 37 menit"
     },
     {
       "id": 102,
@@ -402,9 +406,11 @@ Unified activity feed combining attendance records and requests, sorted by datet
 | id | integer | Record ID |
 | type | string | Activity type: CLOCK_IN, CLOCK_OUT, LEAVE_REQUEST, etc. |
 | datetime | string | ISO 8601 datetime |
-| status | string | Status: PENDING, APPROVED, REJECTED, LATE |
-| label | string | Human-readable label (localized). For late arrivals: "Terlambat X menit" |
-| late_minutes | integer | (Optional) Minutes late, only present when status is LATE |
+| status | string | Status: PENDING, APPROVED, REJECTED |
+| label | string | Human-readable status label (localized) |
+| is_late | boolean | (Optional) Whether clock-in was late, only present when true |
+| late_minutes | integer | (Optional) Minutes late, only present when is_late is true |
+| late_label | string | (Optional) Human-readable late label e.g. "Terlambat 37 menit" |
 
 ---
 
@@ -545,7 +551,8 @@ evidence[photo]: (binary file)
         "id": 1,
         "type": "GEOLOCATION",
         "type_label": "Lokasi GPS",
-        "payload": {
+        "action": "CLOCK_IN",
+        "data": {
           "lat": -6.2088,
           "lng": 106.8456,
           "accuracy": 10.5,
@@ -560,7 +567,8 @@ evidence[photo]: (binary file)
         "id": 2,
         "type": "DEVICE",
         "type_label": "Info Perangkat",
-        "payload": {
+        "action": "CLOCK_IN",
+        "data": {
           "device_id": "unique-device-uuid",
           "model": "iPhone 14 Pro",
           "os": "iOS 17.2",
@@ -742,6 +750,9 @@ Get detailed information for a specific attendance record including evidences, l
     "source": "MOBILE",
     "status": "APPROVED",
     "status_label": "Disetujui",
+    "is_late": true,
+    "late_minutes": 5,
+    "late_label": "Terlambat 5 menit",
     "shift": {
       "id": 1,
       "name": "Regular Shift",
@@ -752,11 +763,26 @@ Get detailed information for a specific attendance record including evidences, l
       {
         "id": 1,
         "type": "GEOLOCATION",
+        "type_label": "Lokasi GPS",
+        "action": "CLOCK_IN",
         "data": {
           "lat": -6.2088,
           "lng": 106.8456,
           "accuracy": 10
-        }
+        },
+        "captured_at": "2026-02-02 08:05:30"
+      },
+      {
+        "id": 2,
+        "type": "GEOLOCATION",
+        "type_label": "Lokasi GPS",
+        "action": "CLOCK_OUT",
+        "data": {
+          "lat": -6.2088,
+          "lng": 106.8456,
+          "accuracy": 10
+        },
+        "captured_at": "2026-02-02 17:30:00"
       }
     ],
     "location": {
@@ -774,6 +800,27 @@ Get detailed information for a specific attendance record including evidences, l
     ]
   }
 }
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | integer | Attendance record ID |
+| date | date | Attendance date (YYYY-MM-DD) |
+| clock_in | datetime | Clock in timestamp in employee's timezone |
+| clock_out | datetime | Clock out timestamp in employee's timezone (null if not clocked out) |
+| source | string | Attendance source: MOBILE, MACHINE, REQUEST, IMPORT |
+| status | string | Attendance status: PENDING, APPROVED, REJECTED, LOCKED |
+| status_label | string | Human-readable status label |
+| is_late | boolean | Whether clock-in was late based on shift policy |
+| late_minutes | integer | Minutes late (0 if not late) |
+| late_label | string | Human-readable late label e.g. "Terlambat 5 menit" (empty if not late) |
+| shift | object | Shift policy for the attendance date (null if no work assignment) |
+| shift.id | integer | Shift policy ID |
+| shift.name | string | Shift name |
+| shift.start_time | string | Shift start time (HH:mm) |
+| shift.end_time | string | Shift end time (HH:mm) |
+| evidences | array | List of evidence records (geolocation, device, photo) |
+| location | object | Matched company location (null if outside geofence) |
+| requests | array | List of correction requests for this attendance |
 ```
 
 **Error Response** (404):
@@ -1188,6 +1235,7 @@ Get paginated list of employee's finalized payslips.
       "period": {
         "year": 2026,
         "month": 1,
+        "month_name": "Januari",
         "period_start": "2026-01-01",
         "period_end": "2026-01-31"
       },
@@ -1195,18 +1243,6 @@ Get paginated list of employee's finalized payslips.
       "deduction_amount": 500000.00,
       "net_amount": 10950000.00,
       "attendance_count": 22,
-      "deductions": [
-        {
-          "code": "BPJS_KES",
-          "employee_amount": 100000.00,
-          "employer_amount": 400000.00
-        },
-        {
-          "code": "BPJS_TK",
-          "employee_amount": 200000.00,
-          "employer_amount": 370000.00
-        }
-      ],
       "additions": [
         {
           "code": "BONUS",
@@ -1214,6 +1250,65 @@ Get paginated list of employee's finalized payslips.
           "amount": 500000.00
         }
       ],
+      "employee": {
+        "id": 1,
+        "name": "John Doe"
+      },
+      "salary": {
+        "base_salary": 10000000.00,
+        "prorated_base_salary": 10000000.00,
+        "allowances": [
+          { "name": "Transport", "amount": 500000.00 },
+          { "name": "Meal", "amount": 750000.00 }
+        ],
+        "total_allowances": 1250000.00
+      },
+      "attendance": {
+        "payable_days": 22,
+        "total_working_days": 22,
+        "breakdown": {
+          "hadir": 20,
+          "terlambat": 2,
+          "cuti_dibayar": 0,
+          "cuti_tidak_dibayar": 0,
+          "sakit_dibayar": 0,
+          "sakit_tidak_dibayar": 0,
+          "libur_dibayar": 0,
+          "libur_tidak_dibayar": 0,
+          "absen": 0
+        }
+      },
+      "earnings": {
+        "salary": 10000000.00,
+        "allowances": 1250000.00,
+        "additions": [
+          { "code": "BONUS", "name": "Bonus Bulanan", "amount": 500000.00 }
+        ],
+        "total_additions": 500000.00
+      },
+      "deductions": [
+        {
+          "code": "BPJS_KES",
+          "name": "BPJS Kesehatan",
+          "employee_amount": 100000.00,
+          "employer_amount": 400000.00,
+          "rate": 1.0,
+          "basis": "GROSS"
+        },
+        {
+          "code": "BPJS_TK",
+          "name": "BPJS Ketenagakerjaan",
+          "employee_amount": 200000.00,
+          "employer_amount": 370000.00,
+          "rate": 2.0,
+          "basis": "GROSS"
+        }
+      ],
+      "summary": {
+        "gross_amount": 11450000.00,
+        "total_deductions": 500000.00,
+        "net_amount": 10950000.00
+      },
       "finalized_at": "2026-02-01 10:00:00"
     }
   ],
@@ -1241,26 +1336,60 @@ Get paginated list of employee's finalized payslips.
 }
 ```
 
+#### Backward Compatible Fields (Top Level)
 | Field | Type | Description |
 |-------|------|-------------|
 | id | integer | Payroll row ID |
 | period.year | integer | Payroll year |
 | period.month | integer | Payroll month (1-12) |
+| period.month_name | string | Month name in Indonesian (e.g., "Januari") |
 | period.period_start | date | Period start date |
 | period.period_end | date | Period end date |
 | gross_amount | number | Total gross amount |
 | deduction_amount | number | Total deductions |
 | net_amount | number | Net amount (gross - deductions) |
 | attendance_count | integer | Number of attendance days |
-| deductions | array | List of deduction items |
-| deductions[].code | string | Deduction code (e.g., BPJS_KES, BPJS_TK) |
+| additions | array | List of addition items (backward compatible format) |
+| finalized_at | datetime | When the payroll was finalized |
+
+#### New Detailed Fields
+| Field | Type | Description |
+|-------|------|-------------|
+| employee.id | integer | Employee ID |
+| employee.name | string | Employee name |
+| salary.base_salary | number | Full base monthly salary |
+| salary.prorated_base_salary | number | Prorated salary based on attendance |
+| salary.allowances | array | List of allowances with name and amount |
+| salary.total_allowances | number | Sum of all allowances |
+| attendance.payable_days | integer | Days that count as paid |
+| attendance.total_working_days | integer | Total working days in period |
+| attendance.breakdown | object | Detailed breakdown by classification |
+| earnings.salary | number | Prorated base salary |
+| earnings.allowances | number | Total allowances |
+| earnings.additions | array | Addition items with code, name, amount |
+| earnings.total_additions | number | Sum of all additions |
+| deductions[].code | string | Deduction code (e.g., BPJS_KES) |
+| deductions[].name | string | Deduction name |
 | deductions[].employee_amount | number | Employee contribution |
 | deductions[].employer_amount | number | Employer contribution |
-| additions | array | List of addition items |
-| additions[].code | string | Addition code |
-| additions[].description | string | Addition description |
-| additions[].amount | number | Addition amount |
-| finalized_at | datetime | When the payroll was finalized |
+| deductions[].rate | number | Deduction rate percentage (nullable) |
+| deductions[].basis | string | Calculation basis (e.g., "GROSS", nullable) |
+| summary.gross_amount | number | Total gross amount |
+| summary.total_deductions | number | Total deductions |
+| summary.net_amount | number | Net amount |
+
+#### Attendance Breakdown Keys
+| Key | Description |
+|-----|-------------|
+| hadir | Days present (on time) |
+| terlambat | Days late |
+| cuti_dibayar | Paid leave days |
+| cuti_tidak_dibayar | Unpaid leave days |
+| sakit_dibayar | Paid sick days |
+| sakit_tidak_dibayar | Unpaid sick days |
+| libur_dibayar | Paid holiday days |
+| libur_tidak_dibayar | Unpaid holiday days |
+| absen | Absent days |
 
 ---
 
@@ -1288,6 +1417,7 @@ Get specific payslip details.
     "period": {
       "year": 2026,
       "month": 1,
+      "month_name": "Januari",
       "period_start": "2026-01-01",
       "period_end": "2026-01-31"
     },
@@ -1295,18 +1425,6 @@ Get specific payslip details.
     "deduction_amount": 500000.00,
     "net_amount": 10950000.00,
     "attendance_count": 22,
-    "deductions": [
-      {
-        "code": "BPJS_KES",
-        "employee_amount": 100000.00,
-        "employer_amount": 400000.00
-      },
-      {
-        "code": "BPJS_TK",
-        "employee_amount": 200000.00,
-        "employer_amount": 370000.00
-      }
-    ],
     "additions": [
       {
         "code": "BONUS",
@@ -1314,10 +1432,71 @@ Get specific payslip details.
         "amount": 500000.00
       }
     ],
+    "employee": {
+      "id": 1,
+      "name": "John Doe"
+    },
+    "salary": {
+      "base_salary": 10000000.00,
+      "prorated_base_salary": 10000000.00,
+      "allowances": [
+        { "name": "Transport", "amount": 500000.00 },
+        { "name": "Meal", "amount": 750000.00 }
+      ],
+      "total_allowances": 1250000.00
+    },
+    "attendance": {
+      "payable_days": 22,
+      "total_working_days": 22,
+      "breakdown": {
+        "hadir": 20,
+        "terlambat": 2,
+        "cuti_dibayar": 0,
+        "cuti_tidak_dibayar": 0,
+        "sakit_dibayar": 0,
+        "sakit_tidak_dibayar": 0,
+        "libur_dibayar": 0,
+        "libur_tidak_dibayar": 0,
+        "absen": 0
+      }
+    },
+    "earnings": {
+      "salary": 10000000.00,
+      "allowances": 1250000.00,
+      "additions": [
+        { "code": "BONUS", "name": "Bonus Bulanan", "amount": 500000.00 }
+      ],
+      "total_additions": 500000.00
+    },
+    "deductions": [
+      {
+        "code": "BPJS_KES",
+        "name": "BPJS Kesehatan",
+        "employee_amount": 100000.00,
+        "employer_amount": 400000.00,
+        "rate": 1.0,
+        "basis": "GROSS"
+      },
+      {
+        "code": "BPJS_TK",
+        "name": "BPJS Ketenagakerjaan",
+        "employee_amount": 200000.00,
+        "employer_amount": 370000.00,
+        "rate": 2.0,
+        "basis": "GROSS"
+      }
+    ],
+    "summary": {
+      "gross_amount": 11450000.00,
+      "total_deductions": 500000.00,
+      "net_amount": 10950000.00
+    },
     "finalized_at": "2026-02-01 10:00:00"
   }
 }
 ```
+
+> **Note**: Response fields are the same as List Payslips. See section 6.3 for field descriptions.
 
 **Error Response** (404):
 ```json
@@ -1329,6 +1508,31 @@ Get specific payslip details.
   }
 }
 ```
+
+---
+
+### 6.5 Download Payslip PDF
+
+Download a finalized payslip in PDF format.
+
+**Endpoint**: `GET /employee/payslips/{id}/download` or `GET /payslips/{id}/download`
+
+> **Note**: `GET /payslips/{id}/download` is an alias endpoint for mobile app navigation convenience.
+
+**Headers**: `Authorization: Bearer {token}`
+
+**Success Response** (200):
+Returns a PDF file stream (`application/pdf`).
+
+**PDF Layout Description**:
+The generated PDF includes:
+- **Company Header**: Official company name, address, phone, email, and NPWP.
+- **Employee Information**: Name, ID, Department, Position, and Period.
+- **Attendance Summary**: Detailed breakdown grid (Present, Late, Leave, etc.).
+- **Salary Breakdown**: Two-column layout with **Earnings** (left) and **Deductions** (right).
+- **Employer Contributions**: Separate section for contributions paid by the company.
+- **Summary Box**: Highlighted **Take Home Pay** (Net Amount) box.
+- **Footer**: Generated timestamp and system tracking info.
 
 ---
 
@@ -1529,6 +1733,40 @@ curl -X POST https://your-domain.com/api/v1/attendance/clock-in \
 ---
 
 ## 12. Changelog
+
+### Version 1.8.0 (2026-02-06)
+- Added Payslip Download endpoint (`GET /payslips/{id}/download`)
+- PDF generation with detailed header, breakdown, earnings/deductions columns
+- Employer contribution and summary box highlights in PDF layout
+
+### Version 1.7.0 (2026-02-06)
+- Enhanced Payslip API with detailed salary breakdown
+- New fields in payslip response:
+  - `period.month_name`: Indonesian month name (e.g., "Januari")
+  - `employee`: Employee ID and name
+  - `salary`: Base salary, prorated salary, allowances breakdown, total allowances
+  - `attendance`: Payable days, total working days, classification breakdown
+  - `earnings`: Salary, allowances, additions with totals
+  - `deductions`: Enhanced with name, rate, and basis fields
+  - `summary`: Consolidated gross, deductions, and net amounts
+- Backward compatible: Original top-level fields (`gross_amount`, `deduction_amount`, `net_amount`, `attendance_count`, `additions`) preserved
+
+### Version 1.6.0 (2026-02-06)
+- Added late status fields to attendance detail endpoint (`GET /attendance/{id}`)
+- New fields: `is_late`, `late_minutes`, `late_label` to indicate if clock-in was late
+- Added `shift` object with shift policy details for the attendance date
+- Late calculation uses employee's work assignment and shift policy for the specific date
+
+### Version 1.5.0 (2026-02-06)
+- Added `action` field to evidence objects in attendance detail endpoint
+- Values: `CLOCK_IN` or `CLOCK_OUT` to identify which action the evidence belongs to
+- Renamed `payload` to `data` in evidence objects for consistency
+
+### Version 1.4.0 (2026-02-06)
+- Added late arrival detection to activity feed and home endpoints
+- Activity items now include `is_late`, `late_minutes`, and `late_label` fields when clock-in was late
+- Late calculation based on employee's shift policy (`start_time` + `late_after_minutes`)
+- Late label format: "Terlambat X menit" or "Terlambat X jam Y menit" for 60+ minutes
 
 ### Version 1.3.0 (2026-02-06)
 - Added Home aggregator endpoint (`GET /home`) for mobile home screen

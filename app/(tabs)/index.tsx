@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -20,11 +21,13 @@ import { useNetwork } from '@/context/NetworkContext';
 import { useGeofence } from '@/hooks/use-geofence';
 import { useAttendance } from '@/hooks/useAttendance';
 import { getRecentActivities } from '@/services/activityService';
+import { getHomeData } from '@/services/homeService';
 import { homeStyles as styles } from '@/styles/screens';
 import { Activity } from '@/types/activity';
 import { formatLateTime } from '@/utils/date';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { t, locale } = useLocalization();
   const { isConnected, pendingCount, triggerSync, refreshPendingCount } = useNetwork();
@@ -85,21 +88,24 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch activities
-  const fetchActivities = useCallback(async () => {
+  // Fetch data
+  const fetchData = useCallback(async () => {
     try {
-      const data = await getRecentActivities(5);
-      setActivities(data);
+      const [homeData, activityData] = await Promise.all([
+        getHomeData(),
+        getRecentActivities(5)
+      ]);
+      setActivities(activityData);
     } catch (error) {
-      console.error('Failed to fetch activities:', error);
+      console.error('Failed to fetch home/activity data:', error);
     }
   }, []);
 
   useEffect(() => {
     if (user?.employee) {
-      fetchActivities();
+      fetchData();
     }
-  }, [user?.employee, fetchActivities]);
+  }, [user?.employee, fetchData]);
 
   useEffect(() => {
     if (isMockLocation) {
@@ -116,8 +122,8 @@ export default function HomeScreen() {
     // Trigger sync first if there are pending actions
     await triggerSync();
     // Then refresh all data
-    await Promise.all([refresh(), refreshLocations(), refreshPendingCount(), fetchActivities()]);
-  }, [refresh, refreshLocations, triggerSync, refreshPendingCount, fetchActivities]);
+    await Promise.all([refresh(), refreshLocations(), refreshPendingCount(), fetchData()]);
+  }, [refresh, refreshLocations, triggerSync, refreshPendingCount, fetchData]);
 
   const onClockAction = (type: 'clock-in' | 'clock-out') => {
     if (isMockLocation) {
@@ -316,6 +322,8 @@ export default function HomeScreen() {
             holidayEnjoy: t.home.holidayEnjoy,
           }}
         />
+
+
 
         <ActivityList
           activities={activities}

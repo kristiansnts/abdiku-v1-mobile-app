@@ -72,6 +72,7 @@ export default function ProfileScreen() {
             </View>
             <Ionicons name="chevron-forward" size={20} color={THEME.muted} />
           </TouchableOpacity>
+
         </View>
 
         {/* Settings */}

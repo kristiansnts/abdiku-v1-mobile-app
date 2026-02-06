@@ -4,8 +4,8 @@ import React from 'react';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useLocalization } from '@/context/LocalizationContext';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -33,6 +33,14 @@ export default function TabLayout() {
           title: t.tabs.requests,
           headerShown: false,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="payslip"
+        options={{
+          title: t.tabs.payslip,
+          headerShown: false,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="wallet.pass.fill" color={color} />,
         }}
       />
       <Tabs.Screen
