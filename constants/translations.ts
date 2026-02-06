@@ -170,6 +170,22 @@ export const translations = {
       mockLocationBlocked: 'Cannot perform attendance action while using fake GPS. Please disable mock location apps and try again.',
       mockLocationError: '⚠️ Mock/Fake GPS detected! Please disable mock location apps.',
     },
+
+    // Login Screen
+    login: {
+      title: 'Abdiku',
+      subtitle: 'Attendance System',
+      emailPlaceholder: 'Email Address',
+      passwordPlaceholder: 'Password',
+      signIn: 'Sign In',
+      signingIn: 'Signing in...',
+      fillAllFields: 'Please fill in all fields',
+      loginFailed: 'Login failed',
+      deviceConflict: 'Device Conflict',
+      deviceConflictMessage: 'Account is active on "{activeDevice}". Do you want to logout from that device and login here?',
+      yesLoginHere: 'Yes, Login Here',
+      version: 'Version',
+    },
   },
 
   id: {
@@ -343,6 +359,22 @@ export const translations = {
       mockLocationMessage: 'Kami mendeteksi bahwa Anda menggunakan lokasi GPS palsu. Silakan nonaktifkan aplikasi lokasi palsu dan gunakan lokasi GPS asli Anda untuk kehadiran.',
       mockLocationBlocked: 'Tidak dapat melakukan absensi saat menggunakan GPS palsu. Silakan nonaktifkan aplikasi lokasi palsu dan coba lagi.',
       mockLocationError: '⚠️ GPS Palsu terdeteksi! Silakan nonaktifkan aplikasi lokasi palsu.',
+    },
+
+    // Login Screen
+    login: {
+      title: 'Abdiku',
+      subtitle: 'Sistem Absensi',
+      emailPlaceholder: 'Alamat Email',
+      passwordPlaceholder: 'Kata Sandi',
+      signIn: 'Masuk',
+      signingIn: 'Sedang masuk...',
+      fillAllFields: 'Harap isi semua kolom',
+      loginFailed: 'Login gagal',
+      deviceConflict: 'Konflik Perangkat',
+      deviceConflictMessage: 'Akun aktif di "{activeDevice}". Apakah Anda ingin keluar dari perangkat tersebut dan masuk di sini?',
+      yesLoginHere: 'Ya, Masuk di Sini',
+      version: 'Versi',
     },
   },
 };

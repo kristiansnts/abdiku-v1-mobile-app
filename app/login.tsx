@@ -1,20 +1,27 @@
 import { THEME } from '@/constants/theme';
+import { useLocalization } from '@/context/LocalizationContext';
+import { loginStyles as styles } from '@/styles/screens/loginStyles';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const { t } = useLocalization();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +29,7 @@ export default function LoginScreen() {
 
   const handleLogin = async (forceSwitch = false) => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t.common.error, t.login.fillAllFields);
       return;
     }
 
@@ -31,20 +38,20 @@ export default function LoginScreen() {
       await login({ email, password }, forceSwitch);
     } catch (err: any) {
       const errorCode = err.response?.data?.error?.code;
-      const errorMessage = err.response?.data?.error?.message || 'Login failed';
+      const errorMessage = err.response?.data?.error?.message || t.login.loginFailed;
       const activeDevice = err.response?.data?.error?.data?.active_device;
 
       if (errorCode === 'DIFFERENT_DEVICE_ACTIVE') {
         Alert.alert(
-          'Device Conflict',
-          `Account is active on "${activeDevice}". Do you want to logout from that device and login here?`,
+          t.login.deviceConflict,
+          t.login.deviceConflictMessage.replace('{activeDevice}', activeDevice),
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Yes, Login Here', onPress: () => handleLogin(true) },
+            { text: t.common.cancel, style: 'cancel' },
+            { text: t.login.yesLoginHere, onPress: () => handleLogin(true) },
           ]
         );
       } else {
-        Alert.alert('Error', errorMessage);
+        Alert.alert(t.common.error, errorMessage);
       }
     } finally {
       setLoading(false);
@@ -52,135 +59,85 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bg }}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
+      <LinearGradient
+        colors={['#f8fafc', '#f1f5f9']}
+        style={styles.background}
       >
-        <View style={styles.inner}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Abdiku</Text>
-            <Text style={styles.subtitle}>Attendance System</Text>
-          </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.inner}>
+            <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.header}>
+              <View style={styles.logoContainer}>
+                <Ionicons name="time" size={50} color={THEME.primary} />
+              </View>
+              <Text style={styles.title}>{t.login.title}</Text>
+              <Text style={styles.subtitle}>{t.login.subtitle}</Text>
+            </Animated.View>
 
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={THEME.muted}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Password"
-                placeholderTextColor={THEME.muted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
+            <Animated.View entering={FadeInUp.delay(400).duration(800)} style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Ionicons name="mail-outline" size={20} color={THEME.muted} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.login.emailPlaceholder}
+                  placeholderTextColor={THEME.mutedLight}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Ionicons name="lock-closed-outline" size={20} color={THEME.muted} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder={t.login.passwordPlaceholder}
+                  placeholderTextColor={THEME.mutedLight}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color={THEME.muted}
+                  />
+                </TouchableOpacity>
+              </View>
+
               <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={() => handleLogin()}
+                disabled={loading}
+                activeOpacity={0.8}
               >
-                <Text style={styles.eyeText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Text style={styles.buttonText}>{t.login.signIn}</Text>
+                    <Ionicons name="arrow-forward" size={20} color="white" style={{ marginLeft: 8 }} />
+                  </>
+                )}
               </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={() => handleLogin()}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Signing in...' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View entering={FadeInUp.delay(600).duration(800)} style={styles.footer}>
+              <Text style={styles.versionText}>{t.login.version} 1.0.0</Text>
+            </Animated.View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: THEME.bg,
-  },
-  inner: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: THEME.primary,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: THEME.muted,
-    marginTop: 8,
-  },
-  form: {
-    gap: 16,
-  },
-  input: {
-    backgroundColor: THEME.card,
-    borderRadius: 15,
-    padding: 18,
-    fontSize: 16,
-    color: THEME.text,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: THEME.card,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 18,
-    fontSize: 16,
-    color: THEME.text,
-  },
-  eyeButton: {
-    paddingHorizontal: 16,
-  },
-  eyeText: {
-    color: THEME.primary,
-    fontWeight: '600',
-  },
-  button: {
-    backgroundColor: THEME.primary,
-    borderRadius: 15,
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    backgroundColor: THEME.muted,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
