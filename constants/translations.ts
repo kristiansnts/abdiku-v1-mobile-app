@@ -59,6 +59,7 @@ export const translations = {
       gpsLocation: 'GPS Location',
       deviceInfo: 'Device Info',
       relatedRequests: 'Related Requests',
+      submitLateRequest: 'Submit Late Request',
     },
 
     // Activity Types
@@ -230,6 +231,7 @@ export const translations = {
       gpsLocation: 'Lokasi GPS',
       deviceInfo: 'Info Perangkat',
       relatedRequests: 'Pengajuan Terkait',
+      submitLateRequest: 'Ajukan Keterlambatan',
     },
 
     // Activity Types

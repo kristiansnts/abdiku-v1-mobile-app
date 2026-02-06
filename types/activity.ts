@@ -19,6 +19,9 @@ export interface Activity {
   datetime: string;  // ISO 8601 datetime
   status: ActivityStatus;
   label: string;  // Human-readable label (localized by backend)
+  is_late?: boolean;  // Whether the activity is late
+  late_minutes?: number;  // Minutes late (only present when is_late is true)
+  late_label?: string;  // Localized late label (e.g., "Terlambat 37 menit")
 }
 
 // Home endpoint response
@@ -59,6 +62,7 @@ export interface BaseEvidence {
   id: number;
   type_label?: string;
   captured_at?: string;
+  action?: 'CLOCK_IN' | 'CLOCK_OUT';  // Action associated with this evidence
 }
 
 export interface GeolocationEvidence extends BaseEvidence {
@@ -92,6 +96,7 @@ export interface RelatedRequest {
   id: number;
   request_type: 'LATE' | 'CORRECTION' | 'MISSING';
   status: ActivityStatus;
+  status_label?: string;
   reason: string;
 }
 
@@ -104,6 +109,9 @@ export interface AttendanceDetail {
   source: string;
   status: ActivityStatus;
   status_label: string;
+  is_late?: boolean;
+  late_minutes?: number;
+  late_label?: string;
   shift: Shift | null;
   evidences: Evidence[];
   location: AttendanceLocation | null;

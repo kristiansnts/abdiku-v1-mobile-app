@@ -5,13 +5,13 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import MapModal from '@/components/MapModal';
+import { ActivityList } from '@/components/activity';
 import {
   ActionButton,
   ClockCard,
   ShiftInfo,
   StatusRow,
 } from '@/components/attendance';
-import { ActivityList } from '@/components/activity';
 import { Toast } from '@/components/common/Toast';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';

@@ -313,8 +313,9 @@ Aggregated data for the mobile home screen. Returns today's attendance status, l
         "id": 101,
         "type": "CLOCK_IN",
         "datetime": "2026-02-06T09:37:00",
-        "status": "APPROVED",
-        "label": "Disetujui"
+        "status": "LATE",
+        "label": "Terlambat 37 menit",
+        "late_minutes": 37
       },
       {
         "id": 102,
@@ -341,7 +342,7 @@ Aggregated data for the mobile home screen. Returns today's attendance status, l
 | today_attendance.shift | string | Shift schedule (start–end) or null |
 | can_clock_in | boolean | Whether user can clock in |
 | can_clock_out | boolean | Whether user can clock out |
-| latest_activity | array | Last 5 activity items (attendance + requests) |
+| latest_activity | array | Last 5 activity items (attendance + requests). Late arrivals include `late_minutes` field |
 | latest_payslip | object | Most recent finalized payslip or null |
 
 ---
@@ -374,8 +375,9 @@ Unified activity feed combining attendance records and requests, sorted by datet
       "id": 101,
       "type": "CLOCK_IN",
       "datetime": "2026-02-06T09:37:00",
-      "status": "APPROVED",
-      "label": "Disetujui"
+      "status": "LATE",
+      "label": "Terlambat 37 menit",
+      "late_minutes": 37
     },
     {
       "id": 102,
@@ -398,10 +400,11 @@ Unified activity feed combining attendance records and requests, sorted by datet
 | Field | Type | Description |
 |-------|------|-------------|
 | id | integer | Record ID |
-| type | string | Activity type: CLOCK_IN, CLOCK_OUT, LATE, LEAVE_REQUEST, etc. |
+| type | string | Activity type: CLOCK_IN, CLOCK_OUT, LEAVE_REQUEST, etc. |
 | datetime | string | ISO 8601 datetime |
-| status | string | Status: PENDING, APPROVED, REJECTED |
-| label | string | Human-readable label (localized) |
+| status | string | Status: PENDING, APPROVED, REJECTED, LATE |
+| label | string | Human-readable label (localized). For late arrivals: "Terlambat X menit" |
+| late_minutes | integer | (Optional) Minutes late, only present when status is LATE |
 
 ---
 

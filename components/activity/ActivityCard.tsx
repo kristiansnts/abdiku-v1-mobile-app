@@ -110,6 +110,16 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, locale: pr
             {activity.label}
           </Text>
         </View>
+
+        {/* Late Badge */}
+        {activity.is_late && activity.late_minutes !== undefined && activity.late_minutes > 0 && (
+          <View style={styles.lateBadge}>
+            <Ionicons name="time-outline" size={12} color={THEME.danger} />
+            <Text style={styles.lateText}>
+              {activity.late_label || `${t.home.late} ${activity.late_minutes} ${activity.late_minutes === 1 ? t.home.minute : t.home.minutes}`}
+            </Text>
+          </View>
+        )}
       </View>
 
       <Ionicons name="chevron-forward" size={16} color={THEME.muted} />
@@ -175,6 +185,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: THEME.muted,
     flex: 1,
+  },
+  lateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#fee2e2',
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  lateText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: THEME.danger,
   },
 });
 

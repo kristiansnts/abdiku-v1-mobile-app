@@ -59,31 +59,14 @@ export default function AttendanceDetailScreen() {
   };
 
   const getEvidenceAction = (evidence: any) => {
-    if (!evidence.captured_at) return '';
+    if (!evidence.action) return '';
 
-    const capTime = new Date(evidence.captured_at.replace(' ', 'T')).getTime();
-    const capTimeStr = evidence.captured_at.includes(' ') ? evidence.captured_at.split(' ')[1].substring(0, 5) : '';
-    const capTimeTStr = evidence.captured_at.includes('T') ? evidence.captured_at.split('T')[1].substring(0, 5) : '';
-    const capTimeString = capTimeStr || capTimeTStr;
-
-    // Check if it matches clock in time
-    if (detail?.clock_in) {
-      const inTimeStr = detail.clock_in.includes(' ') ? detail.clock_in.split(' ')[1].substring(0, 5) : detail.clock_in.substring(0, 5);
-      const inTime = new Date(detail.clock_in.replace(' ', 'T')).getTime();
-      // Match by full time or just HH:mm if full match fails (timezone diff)
-      if (Math.abs(capTime - inTime) < 300000 || (capTimeString && capTimeString === inTimeStr)) {
-        return ` (${t.home?.clockIn || 'Clock In'})`;
-      }
+    if (evidence.action === 'CLOCK_IN') {
+      return ` (${t.home?.clockIn || 'Clock In'})`;
     }
 
-    // Check if it matches clock out time
-    if (detail?.clock_out) {
-      const outTimeStr = detail.clock_out.includes(' ') ? detail.clock_out.split(' ')[1].substring(0, 5) : detail.clock_out.substring(0, 5);
-      const outTime = new Date(detail.clock_out.replace(' ', 'T')).getTime();
-      // Match by full time or just HH:mm
-      if (Math.abs(capTime - outTime) < 300000 || (capTimeString && capTimeString === outTimeStr)) {
-        return ` (${t.home?.clockOut || 'Clock Out'})`;
-      }
+    if (evidence.action === 'CLOCK_OUT') {
+      return ` (${t.home?.clockOut || 'Clock Out'})`;
     }
 
     return '';
@@ -97,6 +80,44 @@ export default function AttendanceDetailScreen() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const calculateLateInfo = () => {
+    // First, check if the API already provided late information
+    if (detail?.is_late && detail?.late_minutes !== undefined && detail.late_minutes > 0) {
+
+      return {
+        isLate: true,
+        minutes: detail.late_minutes,
+      };
+    }
+
+    // Fallback: Calculate from shift data if available
+    if (!detail?.clock_in || !detail?.shift) {
+      return null;
+    }
+
+    const clockInTime = detail.clock_in.includes(' ')
+      ? detail.clock_in.split(' ')[1]
+      : detail.clock_in;
+    const shiftStartTime = detail.shift.start_time;
+
+    // Parse times (HH:mm format)
+    const [clockInHour, clockInMin] = clockInTime.split(':').map(Number);
+    const [shiftHour, shiftMin] = shiftStartTime.split(':').map(Number);
+
+    const clockInMinutes = clockInHour * 60 + clockInMin;
+    const shiftMinutes = shiftHour * 60 + shiftMin;
+    const lateMinutes = clockInMinutes - shiftMinutes;
+
+    if (lateMinutes > 0) {
+      return {
+        isLate: true,
+        minutes: lateMinutes,
+      };
+    }
+
+    return null;
   };
 
   if (error) {
@@ -175,6 +196,69 @@ export default function AttendanceDetailScreen() {
                 <Text style={styles.timeValue}>{formatTime(detail.clock_out)}</Text>
               </View>
             </View>
+            {(() => {
+              const lateInfo = calculateLateInfo();
+
+              if (lateInfo) {
+                const hours = Math.floor(lateInfo.minutes / 60);
+                const mins = lateInfo.minutes % 60;
+                let lateText = '';
+                if (hours > 0) {
+                  lateText = `${hours} ${hours === 1 ? t.home.hour : t.home.hours}`;
+                  if (mins > 0) {
+                    lateText += ` ${mins} ${mins === 1 ? t.home.minute : t.home.minutes}`;
+                  }
+                } else {
+                  lateText = `${mins} ${mins === 1 ? t.home.minute : t.home.minutes}`;
+                }
+
+                // Find existing LATE request
+                const lateRequest = detail.requests?.find(req => req.request_type === 'LATE');
+                const hasLateRequest = !!lateRequest;
+
+                return (
+                  <>
+                    <View style={styles.lateIndicator}>
+                      <Ionicons name="time-outline" size={16} color={THEME.danger} />
+                      <Text style={styles.lateText}>
+                        {t.home.late} {lateText}
+                      </Text>
+                    </View>
+
+                    {/* Submit Late Request Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.submitLateButton,
+                        hasLateRequest && styles.submitLateButtonDisabled
+                      ]}
+                      onPress={() => {
+                        if (!hasLateRequest) {
+                          router.push(`/request-form?type=LATE&attendanceId=${detail.id}` as any);
+                        }
+                      }}
+                      disabled={hasLateRequest}
+                      activeOpacity={hasLateRequest ? 1 : 0.7}
+                    >
+                      <Ionicons
+                        name={hasLateRequest ? "checkmark-circle-outline" : "document-text-outline"}
+                        size={18}
+                        color={hasLateRequest ? THEME.success : THEME.primary}
+                      />
+                      <Text style={[
+                        styles.submitLateButtonText,
+                        hasLateRequest && styles.submitLateButtonTextDisabled
+                      ]}>
+                        {hasLateRequest
+                          ? `${t.attendanceDetail.submitLateRequest} ${lateRequest.status_label ? `(${lateRequest.status_label})` : `(${lateRequest.status})`}`
+                          : t.attendanceDetail.submitLateRequest
+                        }
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                );
+              }
+              return null;
+            })()}
           </View>
 
           {/* Shift Info */}
@@ -214,16 +298,19 @@ export default function AttendanceDetailScreen() {
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>{t.attendanceDetail.evidence}</Text>
               {(() => {
-                // Deduplicate evidences by content to avoid showing redundant data
+                // Deduplicate DEVICE evidences only, keep all GEOLOCATION to show clock-in/out separately
                 const seen = new Set<string>();
                 const uniqueEvidences = detail.evidences.filter((evidence) => {
+                  // Always keep geolocation evidence (to show both clock-in and clock-out locations)
+                  if (evidence.type === 'GEOLOCATION') {
+                    return true;
+                  }
+
+                  // Deduplicate device evidence
                   const data = getEvidenceData(evidence as any) as any;
                   let key = '';
 
-                  if (evidence.type === 'GEOLOCATION' && data) {
-                    // Use coordinates with 5 decimal places for geo-matching (~1.1m precision)
-                    key = `geo-${data.lat.toFixed(5)}-${data.lng.toFixed(5)}`;
-                  } else if (evidence.type === 'DEVICE' && data) {
+                  if (evidence.type === 'DEVICE' && data) {
                     key = `dev-${data.model}-${data.os}`;
                   } else {
                     key = `${evidence.id}-${evidence.type}`;
@@ -247,10 +334,34 @@ export default function AttendanceDetailScreen() {
                           color={THEME.muted}
                         />
                         <View style={styles.evidenceInfo}>
-                          <Text style={styles.evidenceType}>
-                            {evidence.type === 'GEOLOCATION' ? t.attendanceDetail.gpsLocation : t.attendanceDetail.deviceInfo}
-                            {getEvidenceAction(evidence)}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <Text style={styles.evidenceType}>
+                              {evidence.type === 'GEOLOCATION' ? t.attendanceDetail.gpsLocation : t.attendanceDetail.deviceInfo}
+                            </Text>
+                            {evidence.type === 'GEOLOCATION' && (() => {
+                              const action = getEvidenceAction(evidence);
+
+
+                              if (action) {
+                                const isClockIn = action.includes(t.home?.clockIn || 'Clock In');
+
+                                return (
+                                  <View style={[
+                                    styles.evidenceActionBadge,
+                                    { backgroundColor: isClockIn ? '#dcfce7' : '#fee2e2' }
+                                  ]}>
+                                    <Text style={[
+                                      styles.evidenceActionText,
+                                      { color: isClockIn ? THEME.success : THEME.danger }
+                                    ]}>
+                                      {isClockIn ? t.home.clockIn : t.home.clockOut}
+                                    </Text>
+                                  </View>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </View>
                           {evidence.type === 'GEOLOCATION' && geoData && (
                             <View>
                               <Text style={styles.evidenceDetail}>
@@ -419,6 +530,47 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: '#e2e8f0',
   },
+  lateIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fee2e2',
+    borderRadius: 8,
+  },
+  lateText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: THEME.danger,
+  },
+  submitLateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#eff6ff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: THEME.primary,
+  },
+  submitLateButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: THEME.primary,
+  },
+  submitLateButtonDisabled: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  submitLateButtonTextDisabled: {
+    color: THEME.muted,
+  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -479,6 +631,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: THEME.muted,
     marginTop: 1,
+  },
+  evidenceActionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  evidenceActionText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   requestRow: {
     paddingVertical: 8,

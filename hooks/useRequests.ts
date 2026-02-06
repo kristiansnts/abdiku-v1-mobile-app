@@ -1,9 +1,9 @@
+import { TranslationKeys } from '@/constants/translations';
+import * as attendanceService from '@/services/attendanceService';
+import * as requestService from '@/services/requestService';
+import { Attendance, CorrectionRequest, CreateCorrectionRequest, RequestType } from '@/types/attendance';
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { Alert, Platform } from 'react-native';
-import { Attendance, CorrectionRequest, CreateCorrectionRequest, RequestType } from '@/types/attendance';
-import * as requestService from '@/services/requestService';
-import * as attendanceService from '@/services/attendanceService';
-import { TranslationKeys } from '@/constants/translations';
 
 // ============ Types ============
 export type FormStep = 'type' | 'form';
@@ -199,7 +199,9 @@ export const useRequests = (options: UseRequestsOptions = {}): UseRequestsReturn
         payload.requested_clock_out_at = form.clockOutTime.toISOString();
       }
 
-      await requestService.createRequest(payload);
+      console.log('Sending request payload:', JSON.stringify(payload, null, 2));
+      const response = await requestService.createRequest(payload);
+      console.log('Request creation response:', JSON.stringify(response, null, 2));
       setShowModal(false);
       Alert.alert(t.common.success, t.common.success);
       fetchRequests();
