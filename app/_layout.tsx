@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LocalizationProvider } from '@/context/LocalizationContext';
+import { NetworkProvider } from '@/context/NetworkContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
@@ -52,7 +53,9 @@ export default function RootLayout() {
   return (
     <LocalizationProvider>
       <AuthProvider>
-        <RootLayoutNav />
+        <NetworkProvider>
+          <RootLayoutNav />
+        </NetworkProvider>
       </AuthProvider>
     </LocalizationProvider>
   );

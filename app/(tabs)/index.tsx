@@ -16,6 +16,7 @@ import { Toast } from '@/components/common/Toast';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useLocalization } from '@/context/LocalizationContext';
+import { useNetwork } from '@/context/NetworkContext';
 import { useGeofence } from '@/hooks/use-geofence';
 import { useAttendance } from '@/hooks/useAttendance';
 import { homeStyles as styles } from '@/styles/screens';
@@ -24,10 +25,11 @@ import { formatLateTime } from '@/utils/date';
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const { t, locale } = useLocalization();
+  const { isConnected, pendingCount, triggerSync, refreshPendingCount } = useNetwork();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showMapModal, setShowMapModal] = useState(false);
   const [showLateNotice, setShowLateNotice] = useState(true);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' }>({
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
     visible: false,
     message: '',
     type: 'success'
@@ -70,6 +72,7 @@ export default function HomeScreen() {
   } = useAttendance({
     enabled: !!user?.employee,
     onAuthError: handleAuthError,
+    isConnected,
   });
 
   const liveLateMinutes = getLiveLateMinutes(currentTime);
@@ -91,8 +94,11 @@ export default function HomeScreen() {
   }, [isMockLocation, t]);
 
   const onRefresh = useCallback(async () => {
-    await Promise.all([refresh(), refreshLocations()]);
-  }, [refresh, refreshLocations]);
+    // Trigger sync first if there are pending actions
+    await triggerSync();
+    // Then refresh all data
+    await Promise.all([refresh(), refreshLocations(), refreshPendingCount()]);
+  }, [refresh, refreshLocations, triggerSync, refreshPendingCount]);
 
   const onClockAction = (type: 'clock-in' | 'clock-out') => {
     if (isMockLocation) {
@@ -110,12 +116,23 @@ export default function HomeScreen() {
   const onConfirmClockAction = async () => {
     setShowMapModal(false);
     try {
-      await handleClockAction();
-      setToast({
-        visible: true,
-        message: pendingAction === 'clock-in' ? t.home.clockInSuccess : t.home.clockOutSuccess,
-        type: 'success'
-      });
+      const result = await handleClockAction();
+      if (result.offline) {
+        // Saved offline - show info toast
+        setToast({
+          visible: true,
+          message: pendingAction === 'clock-in' ? t.home.offlineClockIn : t.home.offlineClockOut,
+          type: 'info'
+        });
+        refreshPendingCount();
+      } else {
+        // Successfully synced online
+        setToast({
+          visible: true,
+          message: pendingAction === 'clock-in' ? t.home.clockInSuccess : t.home.clockOutSuccess,
+          type: 'success'
+        });
+      }
     } catch (err: any) {
       setToast({
         visible: true,
@@ -185,6 +202,22 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>{t.home.greeting}</Text>
             <Text style={styles.userName}>{user?.name} 👋</Text>
           </Animated.View>
+          {pendingCount > 0 && (
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: '#fef3c7',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 16,
+              gap: 6,
+            }}>
+              <Ionicons name="cloud-upload-outline" size={14} color="#d97706" />
+              <Text style={{ fontSize: 12, color: '#d97706', fontWeight: '600' }}>
+                {t.home.pendingSync}
+              </Text>
+            </View>
+          )}
         </View>
 
         <ClockCard

@@ -42,6 +42,9 @@ export const translations = {
       minute: 'min',
       clockInSuccess: 'Successfully clocked in!',
       clockOutSuccess: 'Successfully clocked out!',
+      pendingSync: 'Pending sync',
+      offlineClockIn: 'Clock in saved offline. Will sync when connected.',
+      offlineClockOut: 'Clock out saved offline. Will sync when connected.',
     },
 
     // Attendance Status
@@ -185,6 +188,9 @@ export const translations = {
       minute: 'menit',
       clockInSuccess: 'Berhasil masuk!',
       clockOutSuccess: 'Berhasil pulang!',
+      pendingSync: 'Menunggu sinkronisasi',
+      offlineClockIn: 'Absen masuk disimpan offline. Akan disinkronkan saat terhubung.',
+      offlineClockOut: 'Absen pulang disimpan offline. Akan disinkronkan saat terhubung.',
     },
 
     // Attendance Status

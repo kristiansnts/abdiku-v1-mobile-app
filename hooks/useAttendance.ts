@@ -1,4 +1,5 @@
 import * as attendanceService from '@/services/attendanceService';
+import * as offlineStorage from '@/services/offlineStorage';
 import { Attendance, AttendanceStatus } from '@/types/attendance';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -8,6 +9,8 @@ import { Alert } from 'react-native';
 interface UseAttendanceOptions {
   enabled?: boolean;
   onAuthError?: (err: any) => void;
+  isConnected?: boolean;
+  onOfflineAction?: () => void;
 }
 
 interface UseAttendanceReturn {
@@ -17,28 +20,31 @@ interface UseAttendanceReturn {
   refreshing: boolean;
   refresh: () => Promise<void>;
   initiateClockAction: (type: 'clock-in' | 'clock-out') => void;
-  handleClockAction: () => Promise<void>;
+  handleClockAction: () => Promise<{ offline: boolean }>;
   pendingAction: 'clock-in' | 'clock-out' | null;
   setPendingAction: (action: 'clock-in' | 'clock-out' | null) => void;
   isWithinShift: () => boolean;
   getLateMinutes: () => number;
   getLiveLateMinutes: (now: Date) => number;
+  hasPendingOfflineActions: boolean;
 }
 
 /**
  * Custom hook for attendance management
  * Handles status, history, clock in/out actions, and shift validation
+ * Supports offline mode with automatic queueing
  */
 export const useAttendance = (
   options: UseAttendanceOptions = {}
 ): UseAttendanceReturn => {
-  const { enabled = true, onAuthError } = options;
+  const { enabled = true, onAuthError, isConnected = true, onOfflineAction } = options;
 
   const [status, setStatus] = useState<AttendanceStatus | null>(null);
   const [history, setHistory] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingAction, setPendingAction] = useState<'clock-in' | 'clock-out' | null>(null);
+  const [hasPendingOfflineActions, setHasPendingOfflineActions] = useState(false);
 
   const handleError = useCallback((err: any) => {
     console.error('Attendance error:', err);
@@ -46,6 +52,11 @@ export const useAttendance = (
       onAuthError(err);
     }
   }, [onAuthError]);
+
+  const checkPendingOfflineActions = useCallback(async () => {
+    const count = await offlineStorage.getPendingCount();
+    setHasPendingOfflineActions(count > 0);
+  }, []);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -67,20 +78,20 @@ export const useAttendance = (
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchStatus(), fetchHistory()]);
+    await Promise.all([fetchStatus(), fetchHistory(), checkPendingOfflineActions()]);
     setRefreshing(false);
-  }, [fetchStatus, fetchHistory]);
+  }, [fetchStatus, fetchHistory, checkPendingOfflineActions]);
 
   useEffect(() => {
     if (enabled) {
       const loadData = async () => {
         setLoading(true);
-        await Promise.all([fetchStatus(), fetchHistory()]);
+        await Promise.all([fetchStatus(), fetchHistory(), checkPendingOfflineActions()]);
         setLoading(false);
       };
       loadData();
     }
-  }, [enabled, fetchStatus, fetchHistory]);
+  }, [enabled, fetchStatus, fetchHistory, checkPendingOfflineActions]);
 
   /**
    * Check if current time is within shift hours
@@ -144,15 +155,16 @@ export const useAttendance = (
 
   /**
    * Execute the pending clock action
+   * Supports offline mode - saves to queue when offline
    */
-  const handleClockAction = useCallback(async () => {
-    if (!pendingAction) return;
+  const handleClockAction = useCallback(async (): Promise<{ offline: boolean }> => {
+    if (!pendingAction) return { offline: false };
 
     try {
       const { status: locStatus } = await Location.requestForegroundPermissionsAsync();
       if (locStatus !== 'granted') {
         Alert.alert('Permission Denied', 'Location permission is required to mark attendance');
-        return;
+        return { offline: false };
       }
 
       const location = await Location.getCurrentPositionAsync({});
@@ -162,6 +174,22 @@ export const useAttendance = (
         accuracy: location.coords.accuracy,
       });
 
+      // Check if we're online
+      if (!isConnected) {
+        // Save to offline queue
+        await offlineStorage.saveOfflineAction(pendingAction, payload);
+        setHasPendingOfflineActions(true);
+        setPendingAction(null);
+
+        // Notify caller about offline action
+        if (onOfflineAction) {
+          onOfflineAction();
+        }
+
+        return { offline: true };
+      }
+
+      // Online - proceed with API call
       if (pendingAction === 'clock-in') {
         await attendanceService.clockIn(payload);
       } else {
@@ -170,11 +198,34 @@ export const useAttendance = (
 
       setPendingAction(null);
       await refresh();
-      return; // Success - caller should show success alert
+      return { offline: false };
     } catch (err: any) {
-      throw err; // Re-throw for caller to handle
+      // If network error, save to offline queue
+      if (err?.code === 'ECONNABORTED' || err?.message?.includes('Network Error') || !isConnected) {
+        try {
+          const location = await Location.getCurrentPositionAsync({});
+          const payload = attendanceService.buildClockPayload(pendingAction, {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            accuracy: location.coords.accuracy,
+          });
+
+          await offlineStorage.saveOfflineAction(pendingAction, payload);
+          setHasPendingOfflineActions(true);
+          setPendingAction(null);
+
+          if (onOfflineAction) {
+            onOfflineAction();
+          }
+
+          return { offline: true };
+        } catch {
+          throw err;
+        }
+      }
+      throw err;
     }
-  }, [pendingAction, refresh]);
+  }, [pendingAction, isConnected, refresh, onOfflineAction]);
 
   return {
     status,
@@ -189,5 +240,6 @@ export const useAttendance = (
     isWithinShift,
     getLateMinutes,
     getLiveLateMinutes,
+    hasPendingOfflineActions,
   };
 };
