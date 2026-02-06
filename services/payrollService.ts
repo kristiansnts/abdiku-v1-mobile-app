@@ -23,3 +23,13 @@ export const getPayslipDetail = async (id: number): Promise<Payslip | null> => {
 export const getPayslipDownloadUrl = (id: number): string => {
     return `${api.defaults.baseURL}/payslips/${id}/download`;
 };
+
+export const getPayslipSignedUrl = async (id: number): Promise<string | null> => {
+    try {
+        const response = await api.get<{ success: boolean; data: { download_url: string } }>(`/payslips/${id}/download-url`);
+        return response.data.data.download_url;
+    } catch (error) {
+        console.error(`Error fetching signed URL for payslip ${id}:`, error);
+        return null;
+    }
+};

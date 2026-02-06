@@ -1511,9 +1511,9 @@ Get specific payslip details.
 
 ---
 
-### 6.5 Download Payslip PDF
+### 6.5 Download Payslip PDF (Direct)
 
-Download a finalized payslip in PDF format.
+Download a finalized payslip in PDF format directly.
 
 **Endpoint**: `GET /employee/payslips/{id}/download` or `GET /payslips/{id}/download`
 
@@ -1523,6 +1523,29 @@ Download a finalized payslip in PDF format.
 
 **Success Response** (200):
 Returns a PDF file stream (`application/pdf`).
+
+---
+
+### 6.6 Get Payslip Download URL (Signed)
+
+Get a temporary signed URL to download the payslip PDF. This is preferred for mobile browsers to avoid header issues.
+
+**Endpoint**: `GET /employee/payslips/{id}/download-url` or `GET /payslips/{id}/download-url`
+
+**Headers**: `Authorization: Bearer {token}`
+
+**Success Response** (200):
+```json
+{
+  "success": true,
+  "data": {
+    "download_url": "https://your-domain.com/signed/download/url?expires=...",
+    "expires_in": 300
+  }
+}
+```
+
+---
 
 **PDF Layout Description**:
 The generated PDF includes:

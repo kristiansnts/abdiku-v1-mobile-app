@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -18,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useLocalization } from '@/context/LocalizationContext';
-import { getPayslipDetail, getPayslipDownloadUrl } from '@/services/payrollService';
+import { getPayslipDetail, getPayslipSignedUrl } from '@/services/payrollService';
 import { Payslip } from '@/types/payroll';
 
 export default function PayslipDetailScreen() {
@@ -34,10 +33,13 @@ export default function PayslipDetailScreen() {
 
         try {
             setDownloading(true);
-            const token = await AsyncStorage.getItem('token');
-            const downloadUrl = `${getPayslipDownloadUrl(Number(id))}?token=${token}`;
+            const signedUrl = await getPayslipSignedUrl(Number(id));
 
-            await WebBrowser.openBrowserAsync(downloadUrl);
+            if (signedUrl) {
+                await WebBrowser.openBrowserAsync(signedUrl);
+            } else {
+                throw new Error('Failed to get signed URL');
+            }
         } catch (error) {
             console.error('Download error:', error);
             Alert.alert(t.common.error, t.errors.operationFailed);
