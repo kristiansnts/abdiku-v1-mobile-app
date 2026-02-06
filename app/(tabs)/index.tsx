@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -34,6 +34,7 @@ export default function HomeScreen() {
     message: '',
     type: 'success'
   });
+  const [isClockingIn, setIsClockingIn] = useState(false);
 
   const {
     isInside,
@@ -115,6 +116,7 @@ export default function HomeScreen() {
 
   const onConfirmClockAction = async () => {
     setShowMapModal(false);
+    setIsClockingIn(true);
     try {
       const result = await handleClockAction();
       if (result.offline) {
@@ -139,6 +141,8 @@ export default function HomeScreen() {
         message: err.response?.data?.error?.message || t.errors.operationFailed,
         type: 'error'
       });
+    } finally {
+      setIsClockingIn(false);
     }
   };
 
@@ -177,6 +181,31 @@ export default function HomeScreen() {
           onHide={() => setToast(prev => ({ ...prev, visible: false }))}
         />
       )}
+      <Modal
+        visible={isClockingIn}
+        transparent
+        animationType="fade"
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            padding: 24,
+            borderRadius: 16,
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <ActivityIndicator size="large" color={THEME.primary} />
+            <Text style={{ fontSize: 16, color: THEME.text, fontWeight: '600' }}>
+              {pendingAction === 'clock-in' ? t.home.clockIn : t.home.clockOut}...
+            </Text>
+          </View>
+        </View>
+      </Modal>
       {!!(status.can_clock_in && liveLateMinutes > 0 && showLateNotice) && (
         <View style={styles.lateNoticeContainerFixed}>
           <View style={{ width: 24 }} />
