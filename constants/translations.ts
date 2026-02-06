@@ -8,8 +8,8 @@ export const translations = {
       cancel: 'Cancel',
       confirm: 'Confirm',
       retry: 'Retry',
-      close: 'Close',
       ok: 'OK',
+      at: 'at',
     },
 
     // Tabs
@@ -45,6 +45,30 @@ export const translations = {
       pendingSync: 'Pending sync',
       offlineClockIn: 'Clock in saved offline. Will sync when connected.',
       offlineClockOut: 'Clock out saved offline. Will sync when connected.',
+    },
+
+    // Attendance Detail
+    attendanceDetail: {
+      title: 'Attendance Detail',
+      clockTimes: 'Clock Times',
+      shift: 'Shift',
+      shiftName: 'Name',
+      schedule: 'Schedule',
+      location: 'Location',
+      evidence: 'Evidence',
+      gpsLocation: 'GPS Location',
+      deviceInfo: 'Device Info',
+      relatedRequests: 'Related Requests',
+    },
+
+    // Activity Types
+    activityTypes: {
+      clockIn: 'Clock In',
+      clockOut: 'Clock Out',
+      late: 'Late Request',
+      leave: 'Leave',
+      correction: 'Correction',
+      missing: 'Missing',
     },
 
     // Attendance Status
@@ -156,6 +180,7 @@ export const translations = {
       retry: 'Coba Lagi',
       close: 'Tutup',
       ok: 'OK',
+      at: 'pukul',
     },
 
     // Tabs
@@ -191,6 +216,30 @@ export const translations = {
       pendingSync: 'Menunggu sinkronisasi',
       offlineClockIn: 'Absen masuk disimpan offline. Akan disinkronkan saat terhubung.',
       offlineClockOut: 'Absen pulang disimpan offline. Akan disinkronkan saat terhubung.',
+    },
+
+    // Attendance Detail
+    attendanceDetail: {
+      title: 'Detail Kehadiran',
+      clockTimes: 'Waktu Absen',
+      shift: 'Shift',
+      shiftName: 'Nama',
+      schedule: 'Jadwal',
+      location: 'Lokasi',
+      evidence: 'Bukti',
+      gpsLocation: 'Lokasi GPS',
+      deviceInfo: 'Info Perangkat',
+      relatedRequests: 'Pengajuan Terkait',
+    },
+
+    // Activity Types
+    activityTypes: {
+      clockIn: 'Absen Masuk',
+      clockOut: 'Absen Pulang',
+      late: 'Justifikasi Telat',
+      leave: 'Cuti/Izin',
+      correction: 'Koreksi Waktu',
+      missing: 'Absen Terlewat',
     },
 
     // Attendance Status

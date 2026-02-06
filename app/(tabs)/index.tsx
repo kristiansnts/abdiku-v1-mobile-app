@@ -8,10 +8,10 @@ import MapModal from '@/components/MapModal';
 import {
   ActionButton,
   ClockCard,
-  HistoryList,
   ShiftInfo,
   StatusRow,
 } from '@/components/attendance';
+import { ActivityList } from '@/components/activity';
 import { Toast } from '@/components/common/Toast';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +19,9 @@ import { useLocalization } from '@/context/LocalizationContext';
 import { useNetwork } from '@/context/NetworkContext';
 import { useGeofence } from '@/hooks/use-geofence';
 import { useAttendance } from '@/hooks/useAttendance';
+import { getRecentActivities } from '@/services/activityService';
 import { homeStyles as styles } from '@/styles/screens';
+import { Activity } from '@/types/activity';
 import { formatLateTime } from '@/utils/date';
 
 export default function HomeScreen() {
@@ -35,6 +37,7 @@ export default function HomeScreen() {
     type: 'success'
   });
   const [isClockingIn, setIsClockingIn] = useState(false);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   const {
     isInside,
@@ -61,7 +64,6 @@ export default function HomeScreen() {
 
   const {
     status,
-    history,
     refreshing,
     refresh,
     initiateClockAction,
@@ -83,6 +85,22 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  // Fetch activities
+  const fetchActivities = useCallback(async () => {
+    try {
+      const data = await getRecentActivities(5);
+      setActivities(data);
+    } catch (error) {
+      console.error('Failed to fetch activities:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.employee) {
+      fetchActivities();
+    }
+  }, [user?.employee, fetchActivities]);
+
   useEffect(() => {
     if (isMockLocation) {
       Alert.alert(
@@ -98,8 +116,8 @@ export default function HomeScreen() {
     // Trigger sync first if there are pending actions
     await triggerSync();
     // Then refresh all data
-    await Promise.all([refresh(), refreshLocations(), refreshPendingCount()]);
-  }, [refresh, refreshLocations, triggerSync, refreshPendingCount]);
+    await Promise.all([refresh(), refreshLocations(), refreshPendingCount(), fetchActivities()]);
+  }, [refresh, refreshLocations, triggerSync, refreshPendingCount, fetchActivities]);
 
   const onClockAction = (type: 'clock-in' | 'clock-out') => {
     if (isMockLocation) {
@@ -289,7 +307,14 @@ export default function HomeScreen() {
           }}
         />
 
-        <HistoryList history={history} locale={locale} t={t} />
+        <ActivityList
+          activities={activities}
+          locale={locale}
+          title={t.home.recentActivity}
+          showViewAll={true}
+          emptyText={t.home.noActivity}
+          viewAllText={t.home.viewHistory}
+        />
         <View style={{ height: 40 }} />
       </ScrollView>
 

@@ -88,6 +88,17 @@ export const formatDateString = (dateStr: string, pattern: DatePattern, locale: 
  */
 export const extractShortTime = (timeStr: string | null): string => {
   if (!timeStr) return '-';
+
+  // If it's "YYYY-MM-DD HH:mm:ss", get the time part
+  // If it's "YYYY-MM-DDTHH:mm:ss", get the time part
+  if (timeStr.includes('T') || (timeStr.includes('-') && timeStr.includes(' '))) {
+    const parts = timeStr.trim().split(/[ T]/);
+    if (parts.length > 1) {
+      return parts[1].substring(0, 5);
+    }
+  }
+
+  // Default: just take first 5 characters (handles "HH:mm:ss")
   return timeStr.substring(0, 5);
 };
 

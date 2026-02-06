@@ -1,0 +1,181 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { THEME } from '@/constants/theme';
+import { useLocalization } from '@/context/LocalizationContext';
+import {
+  Activity,
+  ActivityStatus,
+  ActivityType,
+  getActivityIcon,
+  getStatusColor,
+  isAttendanceActivity,
+} from '@/types/activity';
+
+interface ActivityCardProps {
+  activity: Activity;
+  locale?: string;
+}
+
+const formatDateTime = (datetime: string, locale: string): { date: string; time: string } => {
+  const d = new Date(datetime);
+  const dateStr = d.toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+  const timeStr = d.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return { date: dateStr, time: timeStr };
+};
+
+export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, locale: propLocale }) => {
+  const router = useRouter();
+  const { t, locale: contextLocale } = useLocalization();
+  const locale = propLocale || contextLocale;
+
+  const { date, time } = formatDateTime(activity.datetime, locale);
+  const iconName = getActivityIcon(activity.type);
+  const statusColor = getStatusColor(activity.status);
+  const isAttendance = isAttendanceActivity(activity.type);
+
+  const getTypeLabel = (type: ActivityType): string => {
+    switch (type) {
+      case 'CLOCK_IN':
+        return t.activityTypes.clockIn;
+      case 'CLOCK_OUT':
+        return t.activityTypes.clockOut;
+      case 'LATE':
+        return t.activityTypes.late;
+      case 'LEAVE_REQUEST':
+        return t.activityTypes.leave;
+      case 'CORRECTION':
+        return t.activityTypes.correction;
+      case 'MISSING':
+        return t.activityTypes.missing;
+      default:
+        return type;
+    }
+  };
+
+  const getStatusLabel = (status: ActivityStatus): string => {
+    switch (status) {
+      case 'APPROVED':
+        return t.status.approved;
+      case 'PENDING':
+        return t.status.pending;
+      case 'REJECTED':
+        return t.status.rejected;
+      case 'LOCKED':
+        return t.status.locked;
+      default:
+        return status;
+    }
+  };
+
+  const handlePress = () => {
+    if (isAttendance) {
+      router.push(`/attendance-detail?id=${activity.id}`);
+    } else {
+      router.push(`/request-detail?id=${activity.id}`);
+    }
+  };
+
+  return (
+    <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
+      <View style={[styles.iconContainer, { backgroundColor: `${statusColor}15` }]}>
+        <Ionicons name={iconName as any} size={20} color={statusColor} />
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <Text style={styles.typeLabel}>{getTypeLabel(activity.type)}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: `${statusColor}15` }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {getStatusLabel(activity.status)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.bottomRow}>
+          <Text style={styles.datetime}>
+            {date} • {time}
+          </Text>
+          <Text style={styles.label} numberOfLines={1}>
+            {activity.label}
+          </Text>
+        </View>
+      </View>
+
+      <Ionicons name="chevron-forward" size={16} color={THEME.muted} />
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: THEME.card,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  content: {
+    flex: 1,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  typeLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: THEME.text,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  datetime: {
+    fontSize: 12,
+    color: THEME.muted,
+  },
+  label: {
+    fontSize: 12,
+    color: THEME.muted,
+    flex: 1,
+  },
+});
+
+export default ActivityCard;
