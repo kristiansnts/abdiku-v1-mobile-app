@@ -272,7 +272,13 @@ export default function HomeScreen() {
           locale={locale}
           isInside={isInside}
           nearestPlace={nearestPlace}
-          t={{ insideArea: t.home.insideArea, outsideArea: t.home.outsideArea }}
+          isHoliday={status.is_holiday}
+          holidayName={status.holiday?.name}
+          t={{
+            insideArea: t.home.insideArea,
+            outsideArea: t.home.outsideArea,
+            holiday: t.home.holiday
+          }}
         />
 
         <ShiftInfo shift={status.shift} t={{ shiftTime: t.home.shiftTime }} />
@@ -299,11 +305,15 @@ export default function HomeScreen() {
           isWithinShift={isWithinShift()}
           onClockIn={() => onClockAction('clock-in')}
           onClockOut={() => onClockAction('clock-out')}
+          isHoliday={status.is_holiday}
+          holidayMessage={status.message}
           t={{
             outsideShift: t.home.outsideShift,
             clockInNow: t.home.clockInNow,
             clockOutNow: t.home.clockOutNow,
             attendanceCompleted: t.home.attendanceCompleted,
+            holiday: t.home.holiday,
+            holidayEnjoy: t.home.holidayEnjoy,
           }}
         />
 

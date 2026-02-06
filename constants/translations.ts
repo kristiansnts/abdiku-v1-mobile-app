@@ -45,6 +45,8 @@ export const translations = {
       pendingSync: 'Pending sync',
       offlineClockIn: 'Clock in saved offline. Will sync when connected.',
       offlineClockOut: 'Clock out saved offline. Will sync when connected.',
+      holiday: 'Public Holiday',
+      holidayEnjoy: 'Enjoy your day off! Attendance is closed for today.',
     },
 
     // Attendance Detail
@@ -217,6 +219,8 @@ export const translations = {
       pendingSync: 'Menunggu sinkronisasi',
       offlineClockIn: 'Absen masuk disimpan offline. Akan disinkronkan saat terhubung.',
       offlineClockOut: 'Absen pulang disimpan offline. Akan disinkronkan saat terhubung.',
+      holiday: 'Hari Libur Nasional',
+      holidayEnjoy: 'Selamat berlibur! Absensi ditutup untuk hari ini.',
     },
 
     // Attendance Detail

@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { THEME } from '@/constants/theme';
 import { Shift } from '@/types/attendance';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 interface ShiftInfoProps {
   shift: Shift | null;
@@ -29,18 +29,23 @@ export const ShiftInfo: React.FC<ShiftInfoProps> = ({ shift, t }) => {
 
 const styles = StyleSheet.create({
   shiftInfoContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 15,
+    paddingHorizontal: 24,
+    marginBottom: 20,
+    alignItems: 'center',
   },
   shiftInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+    backgroundColor: 'rgba(100, 116, 139, 0.08)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+    gap: 8,
   },
   shiftInfoText: {
-    fontSize: 13,
+    fontSize: 12,
     color: THEME.muted,
-    fontWeight: '500',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
 });

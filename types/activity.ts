@@ -1,4 +1,4 @@
-import { Shift } from './attendance';
+import { Holiday, Shift } from './attendance';
 
 // Activity types from API (uppercase)
 export type ActivityType =
@@ -40,6 +40,9 @@ export interface HomeData {
     period: string;
     net_amount: number;
   } | null;
+  is_holiday?: boolean;
+  holiday?: Holiday | null;
+  message?: string;
 }
 
 // Evidence types from attendance detail

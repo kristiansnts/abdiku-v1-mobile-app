@@ -62,44 +62,52 @@ export const ActivityList: React.FC<ActivityListProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
+    marginTop: 32,
+    paddingHorizontal: 24,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: THEME.text,
+    letterSpacing: -0.5,
   },
   viewAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
   },
   viewAllText: {
     fontSize: 13,
     color: THEME.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   list: {
-    gap: 0,
+    gap: 12,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
+    paddingVertical: 40,
     backgroundColor: THEME.card,
-    borderRadius: 12,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   emptyText: {
-    marginTop: 8,
-    fontSize: 14,
+    marginTop: 12,
+    fontSize: 15,
     color: THEME.muted,
+    fontWeight: '500',
   },
 });
 

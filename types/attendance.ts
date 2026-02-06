@@ -16,6 +16,13 @@ export interface Shift {
     late_after_minutes: number;
 }
 
+export interface Holiday {
+    id: number;
+    name: string;
+    date: string;
+    is_paid: boolean;
+}
+
 export interface AttendanceStatus {
     can_clock_in: boolean;
     can_clock_out: boolean;
@@ -24,6 +31,8 @@ export interface AttendanceStatus {
     today_attendance: Attendance | null;
     shift: Shift | null;
     message: string;
+    is_holiday?: boolean;
+    holiday?: Holiday | null;
 }
 
 export interface CompanyLocation {
