@@ -94,7 +94,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, locale: pr
 
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <Text style={styles.typeLabel}>{getTypeLabel(activity.type)}</Text>
+          <Text style={styles.typeLabel} numberOfLines={1}>{getTypeLabel(activity.type)}</Text>
           <View style={[styles.statusBadge, { backgroundColor: `${statusColor}15` }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>
               {getStatusLabel(activity.status)}
@@ -152,18 +152,22 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingRight: 8,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 4,
+    flexWrap: 'wrap',
+    gap: 4,
   },
   typeLabel: {
     fontSize: 16,
     fontWeight: '700',
     color: THEME.text,
     letterSpacing: -0.3,
+    flexShrink: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,

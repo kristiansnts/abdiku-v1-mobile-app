@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -107,6 +107,15 @@ export default function HomeScreen() {
     }
   }, [user?.employee, fetchData]);
 
+  // Refresh activities when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.employee) {
+        fetchData();
+      }
+    }, [user?.employee, fetchData])
+  );
+
   useEffect(() => {
     if (isMockLocation) {
       Alert.alert(
@@ -159,6 +168,8 @@ export default function HomeScreen() {
           type: 'success'
         });
       }
+      // Refresh activity list to show the new activity
+      await fetchData();
     } catch (err: any) {
       setToast({
         visible: true,

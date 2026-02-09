@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,7 +16,7 @@ export default function AttendanceDetailScreen() {
   const [detail, setDetail] = useState<AttendanceDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchDetail = useCallback(() => {
     if (id) {
       getAttendanceDetail(Number(id))
         .then(setDetail)
@@ -25,6 +25,17 @@ export default function AttendanceDetailScreen() {
         });
     }
   }, [id]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
+
+  // Refresh detail when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDetail();
+    }, [fetchDetail])
+  );
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -43,11 +54,11 @@ export default function AttendanceDetailScreen() {
     if (timeStr.includes('T') || (timeStr.includes('-') && timeStr.includes(' '))) {
       const d = new Date(timeStr.replace(' ', 'T'));
       if (!isNaN(d.getTime())) {
-        return d.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        });
+    return d.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
       }
     }
 
@@ -74,8 +85,24 @@ export default function AttendanceDetailScreen() {
 
   const formatEvidenceTime = (dateStr?: string) => {
     if (!dateStr) return '';
-    const d = new Date(dateStr.replace(' ', 'T'));
-    if (isNaN(d.getTime())) return '';
+
+    // API returns datetime in UTC
+    const normalized = dateStr.replace('T', ' ');
+    const [datePart, timePart] = normalized.split(' ');
+    if (!datePart || !timePart) return '';
+
+    const dateComponents = datePart.split('-').map(Number);
+    const timeComponents = timePart.split(':').map(Number);
+
+    const d = new Date(Date.UTC(
+      dateComponents[0],
+      dateComponents[1] - 1,
+      dateComponents[2],
+      timeComponents[0],
+      timeComponents[1],
+      timeComponents[2] || 0
+    ));
+
     return d.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit',

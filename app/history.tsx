@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -60,6 +60,13 @@ export default function HistoryScreen() {
     setLoading(true);
     fetchActivities(selectedMonth).finally(() => setLoading(false));
   }, [selectedMonth, fetchActivities]);
+
+  // Refresh activities when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchActivities(selectedMonth);
+    }, [selectedMonth, fetchActivities])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -129,15 +136,17 @@ export default function HistoryScreen() {
               </View>
             ) : (
               groupedActivities.map((group) => (
-                <View key={group.date}>
+                <View key={group.date} style={styles.groupContainer}>
                   <DateGroupHeader date={group.date} locale={locale} />
-                  {group.activities.map((activity) => (
-                    <ActivityCard
-                      key={`${activity.type}-${activity.id}`}
-                      activity={activity}
-                      locale={locale}
-                    />
-                  ))}
+                  <View style={styles.cardsContainer}>
+                    {group.activities.map((activity) => (
+                      <ActivityCard
+                        key={`${activity.type}-${activity.id}`}
+                        activity={activity}
+                        locale={locale}
+                      />
+                    ))}
+                  </View>
                 </View>
               ))
             )}
@@ -175,6 +184,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    paddingTop: 8,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -191,5 +201,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: THEME.muted,
     marginTop: 4,
+  },
+  groupContainer: {
+    marginBottom: 20,
+  },
+  cardsContainer: {
+    gap: 12,
+    marginTop: 8,
   },
 });

@@ -28,7 +28,31 @@ export default function RequestDetailScreen() {
 
   const formatDateTime = (dateStr: string | null) => {
     if (!dateStr) return '-';
-    const d = new Date(dateStr);
+
+    // The API returns datetime in UTC (e.g., "2026-02-09 10:38:00" is UTC time)
+    // We need to parse it as UTC and convert to local timezone
+    // Replace 'T' with space and split to get date and time parts
+    const normalized = dateStr.replace('T', ' ');
+    const [datePart, timePart] = normalized.split(' ');
+
+    if (!datePart) return '-';
+
+    // Parse date components
+    const [year, month, day] = datePart.split('-').map(Number);
+
+    // Parse time components (default to 00:00 if not provided)
+    let hour = 0, minute = 0, second = 0;
+    if (timePart) {
+      const timeComponents = timePart.split(':').map(Number);
+      hour = timeComponents[0] || 0;
+      minute = timeComponents[1] || 0;
+      second = timeComponents[2] || 0;
+    }
+
+    // Create Date object from UTC components
+    // Date.UTC() returns milliseconds, which we pass to new Date()
+    const d = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+
     return d.toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
       weekday: 'short',
       day: 'numeric',
@@ -42,22 +66,44 @@ export default function RequestDetailScreen() {
   const formatTime = (timeStr: string | null) => {
     if (!timeStr) return '-';
 
-    // Handle both "HH:mm:ss" and full ISO datetime "YYYY-MM-DDTHH:mm:ss" or "YYYY-MM-DD HH:mm:ss"
+    let year: number, month: number, day: number, hour: number, minute: number, second: number;
+
     if (timeStr.includes('T') || (timeStr.includes('-') && timeStr.includes(' '))) {
-      const d = new Date(timeStr.replace(' ', 'T'));
-      if (!isNaN(d.getTime())) {
-        return d.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        });
-      }
+      // Full datetime string
+      const normalized = timeStr.replace('T', ' ');
+      const [datePart, timePart] = normalized.split(' ');
+      const dateComponents = datePart.split('-').map(Number);
+      year = dateComponents[0];
+      month = dateComponents[1];
+      day = dateComponents[2];
+
+      const timeComponents = timePart.split(':').map(Number);
+      hour = timeComponents[0];
+      minute = timeComponents[1];
+      second = timeComponents[2] || 0;
+    } else {
+      // Time-only string (HH:mm:ss or HH:mm)
+      // Treat as UTC time on today's date
+      const now = new Date();
+      year = now.getUTCFullYear();
+      month = now.getUTCMonth() + 1;
+      day = now.getUTCDate();
+
+      const timeComponents = timeStr.trim().split(':').map(Number);
+      if (timeComponents.length < 2) return timeStr;
+
+      hour = timeComponents[0];
+      minute = timeComponents[1];
+      second = timeComponents[2] || 0;
     }
 
-    // Fallback: If it's "YYYY-MM-DD HH:mm:ss", extract the time part
-    const parts = timeStr.trim().split(' ');
-    const timeOnly = parts.length > 1 ? parts[1] : parts[0];
-    return timeOnly.substring(0, 5);
+    // Create Date from UTC components and format to local time
+    const d = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    return d.toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
   };
 
   const getRequestTypeIcon = (type: string) => {
@@ -211,9 +257,6 @@ export default function RequestDetailScreen() {
               >
                 <View style={styles.attendanceInfo}>
                   <Text style={styles.attendanceDate}>{detail.attendance.date}</Text>
-                  <Text style={styles.attendanceTimes}>
-                    {formatTime(detail.attendance.clock_in)} - {formatTime(detail.attendance.clock_out)}
-                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={THEME.muted} />
               </TouchableOpacity>
