@@ -20,7 +20,14 @@
       "config": {
         "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
       },
-      "bundleIdentifier": "com.kristiansnts.abdikuv1mobileapp"
+      "bundleIdentifier": "com.kristiansnts.abdikuv1mobileapp",
+      "googleServicesFile": "./GoogleService-Info.plist"
+    },
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#0EA5E9",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Abdiku Notifications"
     },
     "android": {
       "adaptiveIcon": {
@@ -36,8 +43,10 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
       ],
+      "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
           "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
@@ -71,11 +80,27 @@
         }
       ],
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#0EA5E9",
+          "sounds": [],
+          "mode": "production"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4b88983b-c04a-4c67-a314-c5c96444ecc8"
+      }
+    },
+    "owner": "kristiansnts"
   }
 }

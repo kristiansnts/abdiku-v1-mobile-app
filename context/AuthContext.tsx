@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import api from '../services/api';
+import * as notificationService from '../services/notificationService';
 
 interface User {
   id: string;
@@ -79,9 +80,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     await AsyncStorage.setItem('token', res.data.data.token);
     setUser(res.data.data.user);
+
+    // Register FCM token after successful login
+    try {
+      const hasPermission = await notificationService.requestNotificationPermissions();
+      if (hasPermission) {
+        const fcmToken = await notificationService.getFcmToken();
+        if (fcmToken) {
+          await notificationService.registerFcmToken(deviceId, fcmToken);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to register FCM token:', error);
+      // Don't fail login if FCM registration fails
+    }
   };
 
   const logout = async () => {
+    try {
+      const deviceId = await getDeviceId();
+      await notificationService.clearFcmToken(deviceId);
+    } catch (error) {
+      console.warn('Failed to clear FCM token:', error);
+    }
+
     await AsyncStorage.removeItem('token');
     setUser(null);
   };
