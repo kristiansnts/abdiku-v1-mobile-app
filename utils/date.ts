@@ -78,9 +78,39 @@ export const parseTimeString = (timeStr: string): Date => {
 /**
  * Format a date string from API response
  */
-export const formatDateString = (dateStr: string, pattern: DatePattern, locale: Language): string => {
-  const date = new Date(dateStr);
-  return formatDate(date, pattern, locale);
+export const formatDateString = (dateStr: string | null | undefined, pattern: DatePattern, locale: Language): string => {
+  if (!dateStr) return '-';
+
+  try {
+    // Handle formats like "YYYY-MM-DD HH:mm:ss" which might fail in some JS engines (e.g. older Android/iOS)
+    // We normalize it to ISO format by replacing the space with 'T'
+    let normalizedStr = dateStr.trim();
+
+    // Simple heuristic: if it looks like "YYYY-MM-DD HH:mm:ss...", insert the 'T'
+    if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}/.test(normalizedStr)) {
+      normalizedStr = normalizedStr.replace(/\s/, 'T');
+    }
+
+    const date = new Date(normalizedStr);
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(`[formatDateString] Invalid date encountered: "${dateStr}"`);
+      return dateStr;
+    }
+
+    const formatted = formatDate(date, pattern, locale);
+
+    // Extra safety check for toLocaleDateString/toDateString returning "Invalid Date" string
+    if (formatted === 'Invalid Date' || formatted === 'NaN/NaN/NaN') {
+      return dateStr;
+    }
+
+    return formatted;
+  } catch (error) {
+    console.warn(`[formatDateString] Error formatting date: "${dateStr}"`, error);
+    return dateStr;
+  }
 };
 
 /**

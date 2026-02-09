@@ -1,17 +1,19 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, Modal, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { RequestCard, RequestForm, RequestTypeSelector } from '@/components/requests';
 import { THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useLocalization } from '@/context/LocalizationContext';
 import { useRequests } from '@/hooks/useRequests';
-import { RequestCard, RequestTypeSelector, RequestForm } from '@/components/requests';
 import { requestsStyles as styles } from '@/styles/screens';
 
 export default function RequestsScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const { t, locale } = useLocalization();
 
@@ -65,6 +67,7 @@ export default function RequestsScreen() {
               locale={locale}
               t={t}
               onDelete={(id) => handleDelete(id, t)}
+              onPress={(id) => router.push(`/request-detail?id=${id}`)}
             />
           )}
           keyExtractor={(item) => item.id.toString()}

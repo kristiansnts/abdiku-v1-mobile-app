@@ -20,7 +20,17 @@ interface ActivityCardProps {
 }
 
 const formatDateTime = (datetime: string, locale: string): { date: string; time: string } => {
-  const d = new Date(datetime);
+  // Handle space separator in date strings for better compatibility
+  const normalizedStr = datetime.includes(' ') && !datetime.includes('T')
+    ? datetime.replace(' ', 'T')
+    : datetime;
+
+  const d = new Date(normalizedStr);
+
+  if (isNaN(d.getTime())) {
+    return { date: datetime, time: '' };
+  }
+
   const dateStr = d.toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
     weekday: 'short',
     day: 'numeric',
