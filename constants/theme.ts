@@ -7,9 +7,11 @@ import { Platform } from 'react-native';
 
 // Design tokens from docs
 export const THEME = {
-  primary: '#6366f1',
-  primaryDeep: '#4338ca',
-  secondary: '#ec4899',
+  primary: '#1e3a8a', // Deep blue from logo text
+  primaryDeep: '#1e40af', // Deeper blue for gradients
+  primaryLight: '#3b82f6', // Light blue
+  secondary: '#ec4899', // Pink for secondary actions
+  accent: '#2BC49F', // Cyan from logo
   bg: '#f8fafc',
   card: '#ffffff',
   text: '#0f172a',

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
 import { FlatList, Modal, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,15 @@ export default function RequestsScreen() {
     handleSubmit,
     handleDelete,
   } = useRequests({ enabled: !!user?.employee });
+
+  // Refresh data when screen comes into focus (e.g., from push notification)
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.employee) {
+        refresh();
+      }
+    }, [user?.employee, refresh])
+  );
 
   if (!user?.employee) {
     return (

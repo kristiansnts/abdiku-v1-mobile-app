@@ -1,10 +1,10 @@
+import { useToast } from '@/context/ToastContext';
 import * as attendanceService from '@/services/attendanceService';
 import * as offlineStorage from '@/services/offlineStorage';
 import { Attendance, AttendanceStatus } from '@/types/attendance';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 
 interface UseAttendanceOptions {
   enabled?: boolean;
@@ -38,6 +38,7 @@ export const useAttendance = (
   options: UseAttendanceOptions = {}
 ): UseAttendanceReturn => {
   const { enabled = true, onAuthError, isConnected = true, onOfflineAction } = options;
+  const { showToast } = useToast();
 
   const [status, setStatus] = useState<AttendanceStatus | null>(null);
   const [history, setHistory] = useState<Attendance[]>([]);
@@ -163,7 +164,7 @@ export const useAttendance = (
     try {
       const { status: locStatus } = await Location.requestForegroundPermissionsAsync();
       if (locStatus !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to mark attendance');
+        showToast('Location permission is required to mark attendance', 'error');
         return { offline: false };
       }
 

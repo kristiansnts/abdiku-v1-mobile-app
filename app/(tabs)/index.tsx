@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,11 +13,12 @@ import {
   ShiftInfo,
   StatusRow,
 } from '@/components/attendance';
-import { Toast } from '@/components/common/Toast';
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
+import { useDialog } from '@/context/DialogContext';
 import { useLocalization } from '@/context/LocalizationContext';
 import { useNetwork } from '@/context/NetworkContext';
+import { useToast } from '@/context/ToastContext';
 import { useGeofence } from '@/hooks/use-geofence';
 import { useAttendance } from '@/hooks/useAttendance';
 import { getRecentActivities } from '@/services/activityService';
@@ -30,15 +31,12 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { t, locale } = useLocalization();
+  const { showToast } = useToast();
+  const { showDialog } = useDialog();
   const { isConnected, pendingCount, triggerSync, refreshPendingCount } = useNetwork();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showMapModal, setShowMapModal] = useState(false);
   const [showLateNotice, setShowLateNotice] = useState(true);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
-    visible: false,
-    message: '',
-    type: 'success'
-  });
   const [isClockingIn, setIsClockingIn] = useState(false);
   const [activities, setActivities] = useState<Activity[]>([]);
 
@@ -59,9 +57,15 @@ export default function HomeScreen() {
     const message = errorData?.message || err.message || 'Session error';
 
     if (status === 401 || status === 403) {
-      Alert.alert('Access Denied', `${message}. Please sign in again.`, [
-        { text: 'OK', onPress: () => logout() }
-      ]);
+      showDialog({
+        title: 'Access Denied',
+        message: `${message}. Please sign in again.`,
+        icon: 'lock-closed-outline',
+        iconColor: THEME.danger,
+        actions: [
+          { text: 'OK', onPress: () => logout() }
+        ]
+      });
     }
   }, [logout]);
 
@@ -118,12 +122,15 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (isMockLocation) {
-      Alert.alert(
-        t.errors.mockLocationDetected,
-        t.errors.mockLocationMessage,
-        [{ text: t.common.ok, style: 'default' }],
-        { cancelable: false }
-      );
+      showDialog({
+        title: t.errors.mockLocationDetected,
+        message: t.errors.mockLocationMessage,
+        icon: 'navigate-outline',
+        iconColor: THEME.danger,
+        actions: [
+          { text: t.common.ok, onPress: () => { } }
+        ]
+      });
     }
   }, [isMockLocation, t]);
 
@@ -136,11 +143,7 @@ export default function HomeScreen() {
 
   const onClockAction = (type: 'clock-in' | 'clock-out') => {
     if (isMockLocation) {
-      Alert.alert(
-        t.errors.mockLocationDetected,
-        t.errors.mockLocationBlocked,
-        [{ text: t.common.ok }]
-      );
+      showToast(t.errors.mockLocationBlocked, 'error');
       return;
     }
     initiateClockAction(type);
@@ -154,28 +157,16 @@ export default function HomeScreen() {
       const result = await handleClockAction();
       if (result.offline) {
         // Saved offline - show info toast
-        setToast({
-          visible: true,
-          message: pendingAction === 'clock-in' ? t.home.offlineClockIn : t.home.offlineClockOut,
-          type: 'info'
-        });
+        showToast(pendingAction === 'clock-in' ? t.home.offlineClockIn : t.home.offlineClockOut, 'info');
         refreshPendingCount();
       } else {
         // Successfully synced online
-        setToast({
-          visible: true,
-          message: pendingAction === 'clock-in' ? t.home.clockInSuccess : t.home.clockOutSuccess,
-          type: 'success'
-        });
+        showToast(pendingAction === 'clock-in' ? t.home.clockInSuccess : t.home.clockOutSuccess, 'success');
       }
       // Refresh activity list to show the new activity
       await fetchData();
     } catch (err: any) {
-      setToast({
-        visible: true,
-        message: err.response?.data?.error?.message || t.errors.operationFailed,
-        type: 'error'
-      });
+      showToast(err.response?.data?.error?.message || t.errors.operationFailed, 'error');
     } finally {
       setIsClockingIn(false);
     }
@@ -209,13 +200,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bg }} edges={['top']}>
-      {toast.visible && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onHide={() => setToast(prev => ({ ...prev, visible: false }))}
-        />
-      )}
       <Modal
         visible={isClockingIn}
         transparent

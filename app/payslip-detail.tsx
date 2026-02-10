@@ -5,18 +5,18 @@ import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GLOBAL_STYLES, THEME } from '@/constants/theme';
 import { useLocalization } from '@/context/LocalizationContext';
+import { useToast } from '@/context/ToastContext';
 import { getPayslipDetail, getPayslipSignedUrl } from '@/services/payrollService';
 import { Payslip } from '@/types/payroll';
 
@@ -24,6 +24,7 @@ export default function PayslipDetailScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
     const { t, locale } = useLocalization();
+    const { showToast } = useToast();
     const [payslip, setPayslip] = useState<Payslip | null>(null);
     const [loading, setLoading] = useState(true);
     const [downloading, setDownloading] = useState(false);
@@ -42,7 +43,7 @@ export default function PayslipDetailScreen() {
             }
         } catch (error) {
             console.error('Download error:', error);
-            Alert.alert(t.common.error, t.errors.operationFailed);
+            showToast(t.errors.operationFailed, 'error');
         } finally {
             setDownloading(false);
         }
@@ -110,7 +111,7 @@ export default function PayslipDetailScreen() {
                 {/* Main Card */}
                 <Animated.View entering={FadeInDown.delay(200)} style={[styles.mainCard, GLOBAL_STYLES.shadowLg]}>
                     <LinearGradient
-                        colors={[THEME.primary, THEME.primaryDeep]}
+                        colors={[THEME.primaryLight, THEME.primary]}
                         style={styles.cardGradient}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}

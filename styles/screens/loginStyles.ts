@@ -16,7 +16,7 @@ export const loginStyles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        marginBottom: 48,
+        marginBottom: 40,
     },
     logoContainer: {
         width: 100,
@@ -48,14 +48,14 @@ export const loginStyles = StyleSheet.create({
         gap: 20,
     },
     inputGroup: {
-        backgroundColor: 'white',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
         borderRadius: 20,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
-        borderWidth: 1.5,
-        borderColor: '#f1f5f9',
-        height: 64,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        height: 60,
     },
     inputIcon: {
         marginRight: 12,
@@ -76,13 +76,21 @@ export const loginStyles = StyleSheet.create({
         padding: 8,
     },
     button: {
-        backgroundColor: THEME.primary,
         borderRadius: 20,
-        height: 64,
+        height: 60,
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 12,
         flexDirection: 'row',
+        overflow: 'hidden',
+        shadowColor: THEME.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    buttonGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     buttonDisabled: {
         opacity: 0.6,

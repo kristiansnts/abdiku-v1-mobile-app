@@ -1,9 +1,12 @@
+import { THEME } from '@/constants/theme';
 import { TranslationKeys } from '@/constants/translations';
+import { useDialog } from '@/context/DialogContext';
+import { useToast } from '@/context/ToastContext';
 import * as attendanceService from '@/services/attendanceService';
 import * as requestService from '@/services/requestService';
 import { Attendance, CorrectionRequest, CreateCorrectionRequest, RequestType } from '@/types/attendance';
 import { useCallback, useEffect, useReducer, useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 // ============ Types ============
 export type FormStep = 'type' | 'form';
@@ -114,6 +117,8 @@ interface UseRequestsReturn {
 
 export const useRequests = (options: UseRequestsOptions = {}): UseRequestsReturn => {
   const { enabled = true } = options;
+  const { showToast } = useToast();
+  const { showDialog } = useDialog();
 
   // List state
   const [requests, setRequests] = useState<CorrectionRequest[]>([]);
@@ -169,12 +174,12 @@ export const useRequests = (options: UseRequestsOptions = {}): UseRequestsReturn
 
   const handleSubmit = useCallback(async (t: TranslationKeys): Promise<boolean> => {
     if (!form.requestType || !form.reason.trim()) {
-      Alert.alert(t.common.error, 'Please fill all required fields');
+      showToast('Please fill all required fields', 'info');
       return false;
     }
 
     if ((form.requestType === 'LATE' || form.requestType === 'CORRECTION') && !form.selectedAttendance) {
-      Alert.alert(t.common.error, t.requests.selectAttendance);
+      showToast(t.requests.selectAttendance, 'info');
       return false;
     }
 
@@ -195,43 +200,63 @@ export const useRequests = (options: UseRequestsOptions = {}): UseRequestsReturn
         payload.requested_clock_out_at = form.clockOutTime.toISOString();
       } else if (form.requestType === 'MISSING') {
         payload.date = form.selectedDate.toISOString().split('T')[0];
-        payload.requested_clock_in_at = form.clockInTime.toISOString();
-        payload.requested_clock_out_at = form.clockOutTime.toISOString();
+
+        // Combine selected date with clock-in time
+        const clockInDateTime = new Date(form.selectedDate);
+        clockInDateTime.setHours(form.clockInTime.getHours());
+        clockInDateTime.setMinutes(form.clockInTime.getMinutes());
+        clockInDateTime.setSeconds(0);
+        clockInDateTime.setMilliseconds(0);
+        payload.requested_clock_in_at = clockInDateTime.toISOString();
+
+        // Combine selected date with clock-out time
+        const clockOutDateTime = new Date(form.selectedDate);
+        clockOutDateTime.setHours(form.clockOutTime.getHours());
+        clockOutDateTime.setMinutes(form.clockOutTime.getMinutes());
+        clockOutDateTime.setSeconds(0);
+        clockOutDateTime.setMilliseconds(0);
+        payload.requested_clock_out_at = clockOutDateTime.toISOString();
       }
 
       console.log('Sending request payload:', JSON.stringify(payload, null, 2));
       const response = await requestService.createRequest(payload);
       console.log('Request creation response:', JSON.stringify(response, null, 2));
       setShowModal(false);
-      Alert.alert(t.common.success, t.common.success);
+      showToast(t.common.success, 'success');
       fetchRequests();
       return true;
     } catch (err: any) {
-      Alert.alert(t.common.error, err.response?.data?.error?.message || t.errors.operationFailed);
+      showToast(err.response?.data?.error?.message || t.errors.operationFailed, 'error');
       return false;
     } finally {
       dispatch({ type: 'SET_SUBMITTING', payload: false });
     }
-  }, [form, fetchRequests]);
+  }, [form, fetchRequests, showToast]);
 
   const handleDelete = useCallback((id: number, t: TranslationKeys) => {
-    Alert.alert(t.requests.deleteConfirm, '', [
-      { text: t.common.cancel, style: 'cancel' },
-      {
-        text: t.common.confirm,
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await requestService.deleteRequest(id);
-            Alert.alert(t.common.success, t.requests.deleteSuccess);
-            fetchRequests();
-          } catch (err: any) {
-            Alert.alert(t.common.error, err.response?.data?.error?.message || t.errors.operationFailed);
-          }
+    showDialog({
+      title: t.requests.deleteConfirm,
+      message: '',
+      icon: 'trash-outline',
+      iconColor: THEME.danger,
+      actions: [
+        {
+          text: t.common.confirm,
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await requestService.deleteRequest(id);
+              showToast(t.requests.deleteSuccess, 'success');
+              fetchRequests();
+            } catch (err: any) {
+              showToast(err.response?.data?.error?.message || t.errors.operationFailed, 'error');
+            }
+          },
         },
-      },
-    ]);
-  }, [fetchRequests]);
+        { text: t.common.cancel, style: 'cancel', onPress: () => { } },
+      ]
+    });
+  }, [fetchRequests, showDialog, showToast]);
 
   return {
     requests,

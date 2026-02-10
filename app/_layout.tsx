@@ -5,9 +5,11 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { DialogProvider } from '@/context/DialogContext';
 import { LocalizationProvider } from '@/context/LocalizationContext';
 import { NetworkProvider } from '@/context/NetworkContext';
 import { NotificationProvider } from '@/context/NotificationContext';
+import { ToastProvider } from '@/context/ToastContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
@@ -67,7 +69,11 @@ export default function RootLayout() {
       <AuthProvider>
         <NetworkProvider>
           <NotificationProvider>
-            <RootLayoutNav />
+            <ToastProvider>
+              <DialogProvider>
+                <RootLayoutNav />
+              </DialogProvider>
+            </ToastProvider>
           </NotificationProvider>
         </NetworkProvider>
       </AuthProvider>

@@ -7,21 +7,25 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useDialog } from '../context/DialogContext';
+import { useToast } from '../context/ToastContext';
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const { t } = useLocalization();
+  const { showToast } = useToast();
+  const { showDialog } = useDialog();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +33,7 @@ export default function LoginScreen() {
 
   const handleLogin = async (forceSwitch = false) => {
     if (!email || !password) {
-      Alert.alert(t.common.error, t.login.fillAllFields);
+      showToast(t.login.fillAllFields, 'info');
       return;
     }
 
@@ -42,16 +46,17 @@ export default function LoginScreen() {
       const activeDevice = err.response?.data?.error?.data?.active_device;
 
       if (errorCode === 'DIFFERENT_DEVICE_ACTIVE') {
-        Alert.alert(
-          t.login.deviceConflict,
-          t.login.deviceConflictMessage.replace('{activeDevice}', activeDevice),
-          [
-            { text: t.common.cancel, style: 'cancel' },
+        showDialog({
+          title: t.login.deviceConflict,
+          message: t.login.deviceConflictMessage.replace('{activeDevice}', activeDevice),
+          icon: 'phone-portrait-outline',
+          actions: [
             { text: t.login.yesLoginHere, onPress: () => handleLogin(true) },
+            { text: t.common.cancel, style: 'cancel', onPress: () => { } },
           ]
-        );
+        });
       } else {
-        Alert.alert(t.common.error, errorMessage);
+        showToast(errorMessage, 'error');
       }
     } finally {
       setLoading(false);
@@ -62,7 +67,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <LinearGradient
-        colors={['#f8fafc', '#f1f5f9']}
+        colors={['#ffffff', '#f1f5f9']}
         style={styles.background}
       >
         <KeyboardAvoidingView
@@ -71,11 +76,11 @@ export default function LoginScreen() {
         >
           <View style={styles.inner}>
             <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Ionicons name="time" size={50} color={THEME.primary} />
-              </View>
-              <Text style={styles.title}>{t.login.title}</Text>
-              <Text style={styles.subtitle}>{t.login.subtitle}</Text>
+              <Image
+                source={require('../assets/images/abdiku-logo-transparent.png')}
+                style={{ width: 280, height: 120 }}
+                resizeMode="contain"
+              />
             </Animated.View>
 
             <Animated.View entering={FadeInUp.delay(400).duration(800)} style={styles.form}>
@@ -120,6 +125,14 @@ export default function LoginScreen() {
                 disabled={loading}
                 activeOpacity={0.8}
               >
+                {!loading && (
+                  <LinearGradient
+                    colors={[THEME.primaryLight, THEME.accent]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  />
+                )}
                 {loading ? (
                   <ActivityIndicator color="white" />
                 ) : (

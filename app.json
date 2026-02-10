@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "abdiku-v1-mobile-app",
+    "name": "Abdiku by Payrollkami",
     "slug": "abdiku-v1-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/abdiku-thumbnail.png",
     "scheme": "abdikuv1mobileapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -24,7 +24,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "notification": {
-      "icon": "./assets/images/icon.png",
+      "icon": "./assets/images/abdiku-logo.png",
       "color": "#0EA5E9",
       "androidMode": "default",
       "androidCollapsedTitle": "Abdiku Notifications"
@@ -70,7 +70,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/abdiku-thumbnail.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -84,7 +84,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
+          "icon": "./assets/images/abdiku-logo.png",
           "color": "#0EA5E9",
           "sounds": [],
           "mode": "production"
