@@ -1,8 +1,13 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
-import api from './api';
+import { FEATURES } from '@/constants/features';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Device from 'expo-device';
+import api from './api';
+
+// Conditionally import expo-notifications only in standalone builds
+let Notifications: any = null;
+if (FEATURES.PUSH_NOTIFICATIONS) {
+  Notifications = require('expo-notifications');
+}
 
 export interface PushNotification {
   notification_id: string;
@@ -16,19 +21,28 @@ export interface PushNotification {
   created_at: string;
 }
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Configure notification behavior (only in standalone builds)
+if (FEATURES.PUSH_NOTIFICATIONS && Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 /**
  * Request notification permissions
  */
 export async function requestNotificationPermissions(): Promise<boolean> {
+  if (!FEATURES.PUSH_NOTIFICATIONS) {
+    console.log('Push notifications disabled in Expo Go');
+    return false;
+  }
+
   if (!Device.isDevice) {
     console.warn('Push notifications only work on physical devices');
     return false;
@@ -55,6 +69,11 @@ export async function requestNotificationPermissions(): Promise<boolean> {
  * Note: Run 'eas init' in project directory to set up Expo project ID
  */
 export async function getFcmToken(): Promise<string | null> {
+  if (!FEATURES.PUSH_NOTIFICATIONS) {
+    console.log('Push notifications disabled in Expo Go');
+    return null;
+  }
+
   try {
     if (!Device.isDevice) {
       return null;
@@ -145,7 +164,7 @@ export async function getUnreadCount(): Promise<number> {
  * Parse notification data from push payload
  */
 export function parseNotificationData(
-  notification: Notifications.Notification
+  notification: any
 ): PushNotification | null {
   const data = notification.request.content.data;
 
@@ -165,3 +184,6 @@ export function parseNotificationData(
     created_at: data.created_at as string,
   };
 }
+
+// Export Notifications for use in NotificationContext
+export { Notifications };

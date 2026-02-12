@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import * as Notifications from 'expo-notifications';
-import { useAuth } from './AuthContext';
+import { FEATURES } from '@/constants/features';
 import * as notificationService from '@/services/notificationService';
-import { PushNotification } from '@/services/notificationService';
+import { Notifications, PushNotification } from '@/services/notificationService';
 import { useRouter } from 'expo-router';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 interface NotificationContextType {
   notifications: any[];
@@ -27,16 +27,16 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
 
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<any>(undefined);
+  const responseListener = useRef<any>(undefined);
 
   // Initialize notification listeners
   useEffect(() => {
-    if (!user) return;
+    if (!user || !FEATURES.PUSH_NOTIFICATIONS || !Notifications) return;
 
     // Listen for notifications received while app is foregrounded
     notificationListener.current = Notifications.addNotificationReceivedListener(
-      (notification) => {
+      (notification: any) => {
         console.log('Notification received (foreground):', notification);
         refreshUnreadCount();
       }
@@ -44,7 +44,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     // Listen for user interactions with notifications
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
+      (response: any) => {
         const data = notificationService.parseNotificationData(response.notification);
         if (data) {
           handleNotificationPress(data);
@@ -66,6 +66,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   }, [user]);
 
   const checkPermissionStatus = async () => {
+    if (!FEATURES.PUSH_NOTIFICATIONS || !Notifications) return;
     const { status } = await Notifications.getPermissionsAsync();
     setHasPermission(status === 'granted');
   };
@@ -98,8 +99,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       const count = await notificationService.getUnreadCount();
       setUnreadCount(count);
 
-      // Update badge count
-      await Notifications.setBadgeCountAsync(count);
+      // Update badge count (only in standalone builds)
+      if (FEATURES.PUSH_NOTIFICATIONS && Notifications) {
+        await Notifications.setBadgeCountAsync(count);
+      }
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
     }
@@ -118,7 +121,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     try {
       await notificationService.markAllNotificationsAsRead();
       await refreshNotifications();
-      await Notifications.setBadgeCountAsync(0);
+      if (FEATURES.PUSH_NOTIFICATIONS && Notifications) {
+        await Notifications.setBadgeCountAsync(0);
+      }
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
@@ -174,7 +179,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     } else {
       setNotifications([]);
       setUnreadCount(0);
-      Notifications.setBadgeCountAsync(0);
+      if (FEATURES.PUSH_NOTIFICATIONS && Notifications) {
+        Notifications.setBadgeCountAsync(0);
+      }
     }
   }, [user]);
 

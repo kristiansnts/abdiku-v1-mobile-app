@@ -1,7 +1,8 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -12,6 +13,9 @@ import { NotificationProvider } from '@/context/NotificationContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
+
 export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
@@ -21,6 +25,7 @@ function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -41,9 +46,12 @@ function RootLayoutNav() {
     } else if (user && onLoginPage) {
       router.replace('/(tabs)');
     }
+
+    setIsReady(true);
+    SplashScreen.hideAsync();
   }, [user, loading, segments, router]);
 
-  if (loading) return null;
+  if (!isReady) return null;
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

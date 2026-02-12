@@ -24,7 +24,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "notification": {
-      "icon": "./assets/images/abdiku-logo.png",
+      "icon": "./assets/images/abdiku-thumbnail.png",
       "color": "#0EA5E9",
       "androidMode": "default",
       "androidCollapsedTitle": "Abdiku Notifications"

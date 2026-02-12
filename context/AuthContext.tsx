@@ -53,16 +53,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const checkLogin = async () => {
+    console.log('🔐 [Auth] Checking session...');
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn('⚠️ [Auth] Session check timed out');
+        setLoading(false);
+      }
+    }, 5000);
+
     try {
       const token = await AsyncStorage.getItem('token');
       if (token) {
+        console.log('🔑 [Auth] Token found, fetching user...');
         const res = await api.get('/auth/me');
         setUser(res.data.data.user);
+        console.log('✅ [Auth] Session restored for:', res.data.data.user.email);
+      } else {
+        console.log('👋 [Auth] No token found');
       }
     } catch (e) {
+      console.error('❌ [Auth] Session check failed:', e);
       await logout();
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
+      console.log('🏁 [Auth] Initialization complete');
     }
   };
 
