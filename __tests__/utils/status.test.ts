@@ -56,7 +56,7 @@ describe('status utilities', () => {
 
     it('returns danger color for REJECTED', () => {
       const color = getStatusColor('REJECTED');
-      expect(color).toBe('#ef4444'); // THEME.danger
+      expect(color).toBe('#f43f5e'); // THEME.danger
     });
 
     it('returns amber color for PENDING', () => {
