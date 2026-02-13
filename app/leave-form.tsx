@@ -127,7 +127,7 @@ export default function LeaveFormScreen() {
                 <View style={styles.section}>
                     <Text style={styles.label}>Tanggal Mulai</Text>
                     <TouchableOpacity style={styles.dateInput} onPress={() => setShowStartPicker(true)}>
-                        <Ionicons name="calendar-outline" size={20} color={THEME.textLight} />
+                        <Ionicons name="calendar-outline" size={20} color={THEME.muted} />
                         <Text style={styles.dateText}>{startDate.toDateString()}</Text>
                     </TouchableOpacity>
                     {showStartPicker && (
@@ -145,7 +145,7 @@ export default function LeaveFormScreen() {
                 <View style={styles.section}>
                     <Text style={styles.label}>Tanggal Berakhir</Text>
                     <TouchableOpacity style={styles.dateInput} onPress={() => setShowEndPicker(true)}>
-                        <Ionicons name="calendar-outline" size={20} color={THEME.textLight} />
+                        <Ionicons name="calendar-outline" size={20} color={THEME.muted} />
                         <Text style={styles.dateText}>{endDate.toDateString()}</Text>
                     </TouchableOpacity>
                     {showEndPicker && (
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     content: { flex: 1 },
     section: { marginBottom: 20 },
-    label: { fontSize: 14, fontWeight: '600', color: THEME.textLight, marginBottom: 8 },
+    label: { fontSize: 14, fontWeight: '600', color: THEME.muted, marginBottom: 8 },
     typeContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
     typeCard: { 
         padding: 12, 
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     },
     typeCardActive: { backgroundColor: THEME.primary, borderColor: THEME.primary },
     typeName: { fontSize: 14, fontWeight: 'bold', color: THEME.text },
-    typeBalance: { fontSize: 12, color: THEME.textLight, marginTop: 2 },
+    typeBalance: { fontSize: 12, color: THEME.muted, marginTop: 2 },
     dateInput: { 
         flexDirection: 'row', 
         alignItems: 'center', 
