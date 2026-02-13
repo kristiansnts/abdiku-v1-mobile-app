@@ -24,3 +24,6 @@ jobs:
         
       - name: Lint
         run: npm run lint || echo "Linting failed but continuing CI for now"
+
+      - name: Run unit tests
+        run: npm test -- --watchAll=false
