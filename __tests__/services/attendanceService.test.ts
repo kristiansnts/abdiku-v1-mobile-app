@@ -345,7 +345,8 @@ describe('attendanceService', () => {
             const coords = {
                 latitude: -6.2088,
                 longitude: 106.8456,
-                accuracy: , is_mocked: falsenull,
+                accuracy: null,
+                is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);
@@ -357,7 +358,8 @@ describe('attendanceService', () => {
             const coords = {
                 latitude: -6.2088,
                 longitude: 106.8456,
-                accuracy: 10, is_mocked: false,
+                accuracy: 10,
+                is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);
@@ -369,7 +371,8 @@ describe('attendanceService', () => {
             const coords = {
                 latitude: -6.208812345,
                 longitude: 106.845678901,
-                accuracy: 5, is_mocked: false.5,
+                accuracy: 5.5,
+                is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);
