@@ -8,9 +8,10 @@ import { TranslationKeys } from '@/constants/translations';
 interface RequestTypeSelectorProps {
   t: TranslationKeys;
   onSelect: (type: RequestType) => void;
+  onSelectLeave?: () => void;
 }
 
-export const RequestTypeSelector: React.FC<RequestTypeSelectorProps> = ({ t, onSelect }) => {
+export const RequestTypeSelector: React.FC<RequestTypeSelectorProps> = ({ t, onSelect, onSelectLeave }) => {
   return (
     <View style={styles.typeSelectionContainer}>
       <Text style={styles.modalTitle}>{t.requests.selectType}</Text>
@@ -44,6 +45,20 @@ export const RequestTypeSelector: React.FC<RequestTypeSelectorProps> = ({ t, onS
         <View style={styles.typeInfo}>
           <Text style={styles.typeTitle}>{t.requests.missingRequest}</Text>
           <Text style={styles.typeDesc}>{t.requests.missingDesc}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={THEME.muted} />
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={[styles.typeCard, { borderTopWidth: 1, borderTopColor: THEME.border, marginTop: 10, paddingTop: 20 }]} 
+        onPress={onSelectLeave}
+      >
+        <View style={[styles.typeIcon, { backgroundColor: '#dcfce7' }]}>
+          <Ionicons name="airplane-outline" size={28} color="#16a34a" />
+        </View>
+        <View style={styles.typeInfo}>
+          <Text style={styles.typeTitle}>Pengajuan Cuti</Text>
+          <Text style={styles.typeDesc}>Ajukan cuti tahunan, sakit, atau ijin lainnya.</Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={THEME.muted} />
       </TouchableOpacity>
