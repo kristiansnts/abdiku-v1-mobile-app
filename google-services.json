@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "17920126712",
+    "project_id": "payrollkami-f50d6",
+    "storage_bucket": "payrollkami-f50d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:17920126712:android:80db87a7dbdf401b77d50d",
+        "android_client_info": {
+          "package_name": "com.kristiansnts.abdikuv1mobileapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAewhY3ouU9_XWr-5ItL3ExC4VoSFshRGQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -9,6 +9,7 @@ export interface ClockPayload {
       lat: number;
       lng: number;
       accuracy: number | null;
+      is_mocked: boolean;
     };
     device: {
       device_id: string;
@@ -69,7 +70,7 @@ export const getLocations = async (): Promise<CompanyLocation[]> => {
  */
 export const buildClockPayload = (
   actionType: 'clock-in' | 'clock-out',
-  coords: { latitude: number; longitude: number; accuracy: number | null }
+  coords: { latitude: number; longitude: number; accuracy: number | null; mocked?: boolean }
 ): ClockPayload => {
   return {
     [`${actionType.replace('-', '_')}_at`]: new Date().toISOString(),
@@ -78,6 +79,7 @@ export const buildClockPayload = (
         lat: coords.latitude,
         lng: coords.longitude,
         accuracy: coords.accuracy,
+        is_mocked: coords.mocked ?? false,
       },
       device: {
         device_id: 'mobile-device',

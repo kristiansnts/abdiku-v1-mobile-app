@@ -16,6 +16,11 @@ interface Employee {
   position?: string;
   employee_type?: string;
   work_location?: string;
+  ptkp_status?: string;
+  npwp?: string;
+  nik?: string;
+  bpjs_kesehatan_number?: string;
+  bpjs_ketenagakerjaan_number?: string;
   company: {
     name: string;
   };
@@ -121,6 +126,34 @@ export default function KepegawaianDetailScreen() {
             </>
           )}
         </View>
+
+        <Text style={styles.sectionHeaderLabel}>Informasi Legal & Pajak</Text>
+        <View style={styles.detailsCard}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Status PTKP</Text>
+            <Text style={styles.detailValue}>{employee.ptkp_status ?? '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Nomor NPWP</Text>
+            <Text style={styles.detailValue}>{employee.npwp ?? '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Nomor NIK</Text>
+            <Text style={styles.detailValue}>{employee.nik ?? '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>BPJS Kesehatan</Text>
+            <Text style={styles.detailValue}>{employee.bpjs_kesehatan_number ?? '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>BPJS Ketenagakerjaan</Text>
+            <Text style={styles.detailValue}>{employee.bpjs_ketenagakerjaan_number ?? '-'}</Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -129,6 +162,16 @@ export default function KepegawaianDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: THEME.bg, paddingHorizontal: 15 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  sectionHeaderLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: THEME.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginLeft: 5,
+    marginBottom: 10,
+    marginTop: 10,
+  },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
