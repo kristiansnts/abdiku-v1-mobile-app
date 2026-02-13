@@ -39,6 +39,20 @@ export interface AttendanceBreakdown {
     absen: number;
 }
 
+export interface AuditLogItem {
+    label: string;
+    formula: string;
+    result: number | string;
+    note: string;
+}
+
+export interface AuditLog {
+    version: string;
+    timestamp: string;
+    breakdown: AuditLogItem[];
+    legal_references: string[];
+}
+
 export interface Payslip {
     id: number;
     period: PayslipPeriod;
@@ -48,6 +62,7 @@ export interface Payslip {
     net_amount: number;
     attendance_count: number;
     finalized_at: string;
+    audit_log?: AuditLog;
 
     employee: {
         id: number;
