@@ -44,6 +44,7 @@ export interface Payslip {
     period: PayslipPeriod;
     gross_amount: number;
     deduction_amount: number;
+    tax_amount: number;
     net_amount: number;
     attendance_count: number;
     finalized_at: string;
@@ -97,4 +98,3 @@ export interface PayslipDetailResponse {
     success: boolean;
     data: Payslip;
 }
-

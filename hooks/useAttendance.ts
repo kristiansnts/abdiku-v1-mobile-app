@@ -133,7 +133,7 @@ export const useAttendance = (
    * Calculate late minutes based on current time if not clocked in yet
    */
   const getLiveLateMinutes = useCallback((now: Date) => {
-    if (!status?.shift || status?.today_attendance?.clock_in) return 0;
+    if (!status?.shift || !status?.today_attendance?.clock_in) return 0;
 
     const [startHour, startMin] = status.shift.start_time.split(':').map(Number);
     const shiftStart = new Date(now);
@@ -173,6 +173,7 @@ export const useAttendance = (
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy,
+        mocked: location.mocked,
       });
 
       // Check if we're online
@@ -209,6 +210,7 @@ export const useAttendance = (
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
             accuracy: location.coords.accuracy,
+            mocked: location.mocked,
           });
 
           await offlineStorage.saveOfflineAction(pendingAction, payload);

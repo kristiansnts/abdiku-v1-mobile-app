@@ -230,6 +230,17 @@ export default function PayslipDetailScreen() {
                             <Text style={styles.sectionTitle}>{t.payslip.deductions}</Text>
                         </View>
                         <View style={styles.sectionCard}>
+                            {/* PPh21 Tax Row */}
+                            {payslip.tax_amount > 0 && (
+                                <View style={styles.row}>
+                                    <View style={styles.deductionLabelGroup}>
+                                        <Text style={styles.rowLabel}>Pajak (PPh21)</Text>
+                                    </View>
+                                    <Text style={[styles.rowValue, { color: THEME.danger }]}>- {formatCurrency(payslip.tax_amount)}</Text>
+                                </View>
+                            )}
+
+                            {/* Other Deductions */}
                             {payslip.deductions.map((item, index) => (
                                 <View key={`ded-${index}`} style={styles.row}>
                                     <View style={styles.deductionLabelGroup}>
@@ -238,7 +249,7 @@ export default function PayslipDetailScreen() {
                                     <Text style={[styles.rowValue, { color: THEME.danger }]}>- {formatCurrency(item.employee_amount)}</Text>
                                 </View>
                             ))}
-                            {payslip.deductions.length === 0 && (
+                            {payslip.deductions.length === 0 && (payslip.tax_amount || 0) <= 0 && (
                                 <Text style={styles.emptyText}>No deductions</Text>
                             )}
                         </View>
@@ -259,7 +270,7 @@ export default function PayslipDetailScreen() {
                             </View>
                             <View style={styles.summaryRow}>
                                 <Text style={styles.summaryLabel}>{t.payslip.deductions}</Text>
-                                <Text style={[styles.summaryValue, { color: THEME.danger }]}>- {formatCurrency(payslip.summary.total_deductions)}</Text>
+                                <Text style={[styles.summaryValue, { color: THEME.danger }]}>- {formatCurrency(payslip.summary.total_deductions + (payslip.tax_amount || 0))}</Text>
                             </View>
                             <View style={styles.summaryDivider} />
                             <View style={styles.summaryRow}>
