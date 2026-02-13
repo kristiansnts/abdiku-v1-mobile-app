@@ -9,10 +9,13 @@ interface User {
   name: string;
   email: string;
   role: string;
-  company?: {
+  active_company_id?: number;
+  active_company_name?: string;
+  companies?: {
     id: number;
     name: string;
-  };
+    role: string;
+  }[];
   employee?: {
     id: number;
     name: string;
@@ -28,7 +31,8 @@ interface LoginCredentials {
 
 interface AuthContextType {
   user: User | null;
-  login: (credentials: LoginCredentials, forceSwitch?: boolean) => Promise<void>;
+  login: (credentials: LoginCredentials, forceSwitch?: boolean) => Promise<{ needsSelection: boolean; companies: any[] }>;
+  setCompany: (companyId: number) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -63,11 +67,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const token = await AsyncStorage.getItem('token');
+      const savedCompanyId = await AsyncStorage.getItem('active_company_id');
+      
       if (token) {
         console.log('🔑 [Auth] Token found, fetching user...');
         const res = await api.get('/auth/me');
-        setUser(res.data.data.user);
-        console.log('✅ [Auth] Session restored for:', res.data.data.user.email);
+        let userData = res.data.data.user;
+        
+        if (savedCompanyId) {
+            userData = {
+                ...userData,
+                active_company_id: parseInt(savedCompanyId)
+            };
+        }
+        
+        setUser(userData);
+        console.log('✅ [Auth] Session restored for:', userData.email);
       } else {
         console.log('👋 [Auth] No token found');
       }
@@ -93,8 +108,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       app_version: '1.0.0',
       force_switch: forceSwitch,
     });
-    await AsyncStorage.setItem('token', res.data.data.token);
-    setUser(res.data.data.user);
+    
+    const { token, user: userData, companies } = res.data.data;
+    await AsyncStorage.setItem('token', token);
+    
+    const needsSelection = companies && companies.length > 1;
+    
+    if (!needsSelection) {
+        const activeCompany = companies && companies.length === 1 ? companies[0] : null;
+        if (activeCompany) {
+            await AsyncStorage.setItem('active_company_id', activeCompany.id.toString());
+            setUser({ ...userData, active_company_id: activeCompany.id, active_company_name: activeCompany.name, role: activeCompany.role });
+        } else {
+            setUser(userData);
+        }
+    } else {
+        setUser({ ...userData, companies });
+    }
 
     // Register FCM token after successful login
     try {
@@ -107,8 +137,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.warn('Failed to register FCM token:', error);
-      // Don't fail login if FCM registration fails
     }
+
+    return { needsSelection, companies: companies || [] };
+  };
+
+  const setCompany = async (companyId: number) => {
+    const res = await api.post('/auth/set-company', { company_id: companyId });
+    const { active_company_id, active_company_name, role } = res.data.data;
+    
+    await AsyncStorage.setItem('active_company_id', active_company_id.toString());
+    
+    setUser(prev => prev ? {
+        ...prev,
+        active_company_id,
+        active_company_name,
+        role
+    } : null);
   };
 
   const logout = async () => {
@@ -120,11 +165,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('active_company_id');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, setCompany, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

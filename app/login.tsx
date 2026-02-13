@@ -4,6 +4,7 @@ import { loginStyles as styles } from '@/styles/screens/loginStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,6 +23,7 @@ import { useDialog } from '../context/DialogContext';
 import { useToast } from '../context/ToastContext';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { login } = useAuth();
   const { t } = useLocalization();
   const { showToast } = useToast();
@@ -39,7 +41,10 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await login({ email, password }, forceSwitch);
+      const { needsSelection } = await login({ email, password }, forceSwitch);
+      if (needsSelection) {
+        router.push('/select-company');
+      }
     } catch (err: any) {
       const errorCode = err.response?.data?.error?.code;
       const errorMessage = err.response?.data?.error?.message || t.login.loginFailed;

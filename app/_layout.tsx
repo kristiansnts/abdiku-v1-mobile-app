@@ -44,7 +44,11 @@ function RootLayoutNav() {
     if (!user && (inAuthGroup || inProtectedRoute)) {
       router.replace('/login');
     } else if (user && onLoginPage) {
-      router.replace('/(tabs)');
+      if (user.companies && user.companies.length > 1 && !user.active_company_id) {
+        router.replace('/select-company');
+      } else {
+        router.replace('/(tabs)');
+      }
     }
 
     setIsReady(true);
