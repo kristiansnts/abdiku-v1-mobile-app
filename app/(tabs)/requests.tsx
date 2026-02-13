@@ -112,6 +112,10 @@ export default function RequestsScreen() {
             <RequestTypeSelector
               t={t}
               onSelect={(type) => dispatch({ type: 'SET_REQUEST_TYPE', payload: type })}
+              onSelectLeave={() => {
+                setShowModal(false);
+                router.push('/leave-form');
+              }}
             />
           ) : (
             <RequestForm
