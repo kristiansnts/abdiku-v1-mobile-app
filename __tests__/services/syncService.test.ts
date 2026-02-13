@@ -23,6 +23,7 @@ describe('syncService', () => {
         lat: -6.2088,
         lng: 106.8456,
         accuracy: 10,
+        is_mocked: false,
       },
       device: {
         device_id: 'test-device',

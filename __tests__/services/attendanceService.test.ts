@@ -135,7 +135,7 @@ describe('attendanceService', () => {
                     geolocation: {
                         lat: -6.2088,
                         lng: 106.8456,
-                        accuracy: 10,
+                        accuracy: 10, is_mocked: false,
                     },
                     device: {
                         device_id: 'test-device',
@@ -160,7 +160,7 @@ describe('attendanceService', () => {
                     geolocation: {
                         lat: -6.2088,
                         lng: 106.8456,
-                        accuracy: 10,
+                        accuracy: 10, is_mocked: false,
                     },
                     device: {
                         device_id: 'test-device',
@@ -186,7 +186,7 @@ describe('attendanceService', () => {
                     geolocation: {
                         lat: -6.2088,
                         lng: 106.8456,
-                        accuracy: 15,
+                        accuracy: 15, is_mocked: false,
                     },
                     device: {
                         device_id: 'test-device',
@@ -211,7 +211,7 @@ describe('attendanceService', () => {
                     geolocation: {
                         lat: -6.2088,
                         lng: 106.8456,
-                        accuracy: 10,
+                        accuracy: 10, is_mocked: false,
                     },
                     device: {
                         device_id: 'test-device',
@@ -291,7 +291,7 @@ describe('attendanceService', () => {
             const coords = {
                 latitude: -6.2088,
                 longitude: 106.8456,
-                accuracy: 10,
+                accuracy: 10, is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);
@@ -302,7 +302,7 @@ describe('attendanceService', () => {
                     geolocation: {
                         lat: -6.2088,
                         lng: 106.8456,
-                        accuracy: 10,
+                        accuracy: 10, is_mocked: false,
                     },
                     device: {
                         device_id: 'mobile-device',
@@ -318,7 +318,7 @@ describe('attendanceService', () => {
             const coords = {
                 latitude: -6.2088,
                 longitude: 106.8456,
-                accuracy: 15,
+                accuracy: 15, is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-out', coords);
@@ -329,7 +329,7 @@ describe('attendanceService', () => {
                     geolocation: {
                         lat: -6.2088,
                         lng: 106.8456,
-                        accuracy: 15,
+                        accuracy: 15, is_mocked: false,
                     },
                     device: {
                         device_id: 'mobile-device',
@@ -346,6 +346,7 @@ describe('attendanceService', () => {
                 latitude: -6.2088,
                 longitude: 106.8456,
                 accuracy: null,
+                is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);
@@ -358,6 +359,7 @@ describe('attendanceService', () => {
                 latitude: -6.2088,
                 longitude: 106.8456,
                 accuracy: 10,
+                is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);
@@ -370,6 +372,7 @@ describe('attendanceService', () => {
                 latitude: -6.208812345,
                 longitude: 106.845678901,
                 accuracy: 5.5,
+                is_mocked: false,
             };
 
             const payload = buildClockPayload('clock-in', coords);

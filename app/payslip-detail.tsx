@@ -279,6 +279,47 @@ export default function PayslipDetailScreen() {
                             </View>
                         </View>
                     </View>
+
+                    {/* The Auditor - Transparency Section */}
+                    {payslip.audit_log && (
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <View style={[styles.sectionIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+                                    <Ionicons name="shield-checkmark" size={18} color="#8b5cf6" />
+                                </View>
+                                <Text style={styles.sectionTitle}>Compliance Auditor</Text>
+                            </View>
+                            <View style={[styles.sectionCard, { borderColor: 'rgba(139, 92, 246, 0.2)', backgroundColor: '#fdfaff' }]}>
+                                <Text style={styles.auditInfoText}>
+                                    Perhitungan ini telah diaudit sesuai dengan regulasi ketenagakerjaan Indonesia terbaru.
+                                </Text>
+                                
+                                <View style={styles.auditStepsContainer}>
+                                    {payslip.audit_log.breakdown.map((step, idx) => (
+                                        <View key={idx} style={styles.auditStepRow}>
+                                            <View style={styles.auditStepDot} />
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.auditStepLabel}>{step.label}</Text>
+                                                <Text style={styles.auditStepFormula}>{step.formula} → <Text style={{fontWeight: '800'}}>{typeof step.result === 'number' ? formatCurrency(step.result) : step.result}</Text></Text>
+                                                <Text style={styles.auditStepNote}>{step.note}</Text>
+                                            </View>
+                                        </View>
+                                    ))}
+                                </View>
+
+                                <View style={styles.legalRefContainer}>
+                                    <Text style={styles.legalRefHeader}>Referensi Hukum:</Text>
+                                    <View style={styles.legalRefList}>
+                                        {payslip.audit_log.legal_references.map((ref, idx) => (
+                                            <View key={idx} style={styles.legalTag}>
+                                                <Text style={styles.legalTagText}>{ref}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    )}
                 </Animated.View>
             </ScrollView>
         </SafeAreaView>
@@ -558,5 +599,78 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: THEME.muted,
         fontWeight: '500',
+    },
+    auditInfoText: {
+        fontSize: 12,
+        color: THEME.muted,
+        fontStyle: 'italic',
+        lineHeight: 18,
+        marginBottom: 8,
+    },
+    auditStepsContainer: {
+        gap: 16,
+        paddingVertical: 8,
+    },
+    auditStepRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    auditStepDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#8b5cf6',
+        marginTop: 6,
+    },
+    auditStepLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: THEME.text,
+        marginBottom: 2,
+    },
+    auditStepFormula: {
+        fontSize: 11,
+        fontFamily: 'monospace',
+        color: THEME.primary,
+        backgroundColor: '#f1f5f9',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginBottom: 4,
+    },
+    auditStepNote: {
+        fontSize: 11,
+        color: THEME.muted,
+        lineHeight: 15,
+    },
+    legalRefContainer: {
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#f1f5f9',
+    },
+    legalRefHeader: {
+        fontSize: 11,
+        fontWeight: '800',
+        color: THEME.muted,
+        textTransform: 'uppercase',
+        marginBottom: 8,
+    },
+    legalRefList: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 6,
+    },
+    legalTag: {
+        backgroundColor: '#f1f5f9',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    legalTagText: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: THEME.muted,
     },
 });
