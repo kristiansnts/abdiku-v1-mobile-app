@@ -11,9 +11,16 @@ const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
+  const companyId = await AsyncStorage.getItem('active_company_id');
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (companyId) {
+    config.headers['X-Active-Company-Id'] = companyId;
+  }
+
   return config;
 });
 
